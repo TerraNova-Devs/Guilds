@@ -36,7 +36,7 @@ public class TasksGui extends RoseGUI {
     private final List<DailyTask> dailyTasks;
 
     // Monatliche Gilden-Task (falls vorhanden)
-    private final MonthlyTask monthlyTask;
+    private MonthlyTask monthlyTask;
 
     // Manager für tägliche und monatliche Logik
     private final TaskManager taskManager;
@@ -48,7 +48,7 @@ public class TasksGui extends RoseGUI {
      * @param guild      Die Gilde, zu der der Spieler gehört
      * @param dailyTasks Liste an täglichen (per-player) Tasks
      */
-    public TasksGui(Guilds plugin, Player player, Guild guild, List<DailyTask> dailyTasks) {
+    public TasksGui(Guilds plugin, Player player, Guild guild, List<DailyTask> dailyTasks, MonthlyTask monthlyTask) {
         super(player, "tasks_gui", Component.text("Gildenaufgaben"), 4);
         this.plugin = plugin;
         this.guild = guild;
@@ -59,7 +59,7 @@ public class TasksGui extends RoseGUI {
         this.monthlyTaskManager = plugin.getMonthlyTaskManager();
 
         // Die monatliche Task für diese Gilde laden
-        this.monthlyTask = monthlyTaskManager.getMonthlyTask(guild);
+        this.monthlyTask = monthlyTask;
     }
 
     @Override
@@ -105,6 +105,7 @@ public class TasksGui extends RoseGUI {
             addItem(19 + i, dailyItems[i]);
         }
 
+        System.out.println("Monthly task: " + monthlyTask.getDescription());
         // 5) Monatliche Task
         if (monthlyTask != null) {
             int guildProgress = monthlyTaskManager.getGuildProgress(guild, monthlyTask.getDescription());
@@ -179,7 +180,7 @@ public class TasksGui extends RoseGUI {
                             // Belohnung beanspruchen
                             taskManager.claimReward(guild, dt, e.getWhoClicked().getUniqueId());
                             // GUI aktualisieren
-                            new TasksGui(plugin, (Player) e.getWhoClicked(), guild, dailyTasks).open();
+                            new TasksGui(plugin, (Player) e.getWhoClicked(), guild, dailyTasks, monthlyTask).open();
                         });
             }
         }
@@ -229,7 +230,7 @@ public class TasksGui extends RoseGUI {
                             // Gildenweiter Task -> jeder Spieler einmal abholen
                             monthlyTaskManager.claimMonthlyReward(guild, mt.getDescription(), e.getWhoClicked().getUniqueId());
                             // GUI neu öffnen
-                            new TasksGui(plugin, (Player) e.getWhoClicked(), guild, dailyTasks).open();
+                            new TasksGui(plugin, (Player) e.getWhoClicked(), guild, dailyTasks, monthlyTask).open();
                         });
             }
         }

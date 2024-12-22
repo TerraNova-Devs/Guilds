@@ -121,18 +121,19 @@ public class MonthlyTaskManager {
         }
     }
 
-    public void assignRandomMonthlyTask(String guildName) {
-        List<MonthlyTask> pool = monthlyTaskPools.get(guildName);
+    public void assignRandomMonthlyTask(Guild guild) {
+        List<MonthlyTask> pool = monthlyTaskPools.get(guild.getType().toString().toUpperCase());
         if (pool == null || pool.isEmpty()) return;
 
         Collections.shuffle(pool);
         MonthlyTask chosen = pool.get(0);
 
+        System.out.println("Chosen: " + chosen.getDescription());
         // store in memory
-        assignedTasks.put(guildName, chosen);
+        assignedTasks.put(guild.getName(), chosen);
 
         // also store in DB
-        monthlyTaskDao.assignMonthlyTask(guildName, chosen);
+        monthlyTaskDao.assignMonthlyTask(guild.getName(), chosen);
     }
 
     public MonthlyTask loadMonthlyTask(String guildName) {
@@ -146,7 +147,8 @@ public class MonthlyTaskManager {
         loadMonthlyTaskPoolsFromConfig();
 
         for (Guild guild : guildManager.getAllGuilds()) {
-            assignRandomMonthlyTask(guild.getName());
+            System.out.println("Assigning monthly task to " + guild.getType().toString());
+            assignRandomMonthlyTask(guild);
         }
     }
 

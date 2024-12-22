@@ -58,7 +58,7 @@ public class Guilds extends JavaPlugin {
         this.npcManager = new NPCManager(this, guildManager);
 
         getServer().getPluginManager().registerEvents(new PlayerProgressListener(this, guildManager, taskManager, monthlyTaskManager), this);
-        getServer().getPluginManager().registerEvents(new NPCClickListener(this, guildManager, taskManager, npcManager), this);
+        getServer().getPluginManager().registerEvents(new NPCClickListener(this, guildManager, taskManager, monthlyTaskManager, npcManager), this);
         getServer().getPluginManager().registerEvents(new RoseGUIListener(), this);
 
         getCommand("guild").setExecutor(new GuildCommand(this, guildManager, taskManager));

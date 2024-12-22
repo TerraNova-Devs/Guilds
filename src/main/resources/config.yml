@@ -51,38 +51,38 @@ tasks:
       money_reward: 5.0
 
 monthly_task_pools:
-  FARMERS:
+  FARMER:
     - description: "Ernte 10000 Weizen (Gildenweit)"
-      event: "HARVEST"
+      event: HARVEST
       material_or_mob: "WHEAT"
       required_amount: 10000
       points_reward: 50
       money_reward: 75.0
 
     - description: "Ernte 5000 Karotten (Gildenweit)"
-      event: "HARVEST"
-      material_or_mob: "CARROT"
+      event: HARVEST
+      material_or_mob: "CARROTS"
       required_amount: 5000
       points_reward: 40
       money_reward: 30.0
 
     - description: "Ernte 8000 Kartoffeln (Gildenweit)"
-      event: "HARVEST"
-      material_or_mob: "POTATO"
+      event: HARVEST
+      material_or_mob: "POTATOES"
       required_amount: 8000
       points_reward: 45
       money_reward: 50.0
 
-  MINERS:
+  MINER:
     - description: "Baue 5000 Steine (Gildenweit)"
-      event: "BLOCK_BREAK"
+      event: BLOCK_BREAK
       material_or_mob: "STONE"
       required_amount: 5000
       points_reward: 40
       money_reward: 50.0
 
     - description: "Finde 300 Diamanten (Gildenweit)"
-      event: "BLOCK_BREAK"
+      event: BLOCK_BREAK
       material_or_mob: "DIAMOND_ORE"
       required_amount: 300
       points_reward: 100

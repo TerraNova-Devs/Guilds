@@ -5,6 +5,7 @@ import de.mcterranova.guilds.gui.JoinGui;
 import de.mcterranova.guilds.gui.TasksGui;
 import de.mcterranova.guilds.model.DailyTask;
 import de.mcterranova.guilds.model.Guild;
+import de.mcterranova.guilds.model.MonthlyTask;
 import de.mcterranova.guilds.service.*;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.entity.Player;
@@ -17,12 +18,14 @@ public class NPCClickListener implements Listener {
 
     private final GuildManager guildManager;
     private final TaskManager taskManager;
+    private final MonthlyTaskManager monthlyTaskManager;
     private final NPCManager npcManager;
     private final Guilds plugin;
 
-    public NPCClickListener(Guilds plugin, GuildManager guildManager, TaskManager taskManager, NPCManager npcManager) {
+    public NPCClickListener(Guilds plugin, GuildManager guildManager, TaskManager taskManager, MonthlyTaskManager monthlyTaskManager, NPCManager npcManager) {
         this.guildManager = guildManager;
         this.taskManager = taskManager;
+        this.monthlyTaskManager = monthlyTaskManager;
         this.npcManager = npcManager;
         this.plugin = plugin;
     }
@@ -44,7 +47,8 @@ public class NPCClickListener implements Listener {
         } else {
             if (playerGuild.getName().equalsIgnoreCase(guildName)) {
                 List<DailyTask> tasks = taskManager.getDailyTasksForGuild(guild.getName());
-                new TasksGui(plugin, player, guild, tasks).open();
+                MonthlyTask monthlyTask = monthlyTaskManager.getMonthlyTask(guild);
+                new TasksGui(plugin, player, guild, tasks, monthlyTask).open();
             } else {
                 player.sendMessage("§cDu bist bereits in einer anderen Gilde und kannst nicht beitreten.");
             }
