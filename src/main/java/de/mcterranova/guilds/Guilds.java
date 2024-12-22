@@ -64,22 +64,18 @@ public class Guilds extends JavaPlugin {
         getCommand("guild").setExecutor(new GuildCommand(this, guildManager, taskManager));
         getCommand("guildadmin").setExecutor(new GuildAdminCommand(this, guildManager));
 
-        // Initialize NPCs after Citizens loads
         Bukkit.getScheduler().runTaskLater(this, () -> {
             npcManager.init();
         }, 20L);
 
-        // Instead of forcibly assigning daily tasks now, we do:
         taskManager.tryDailyResetOnStartup();
         monthlyTaskManager.tryMonthlyResetOnStartup();
 
-        // Schedule daily reset at midnight
         long ticksUntilMidnight = TimeUtil.getTicksUntilMidnight();
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             taskManager.dailyReset();
         }, ticksUntilMidnight, 24L * 60L * 60L * 20L);
 
-        // Monthly evaluation
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             rewardManager.evaluateMonthlyWinner();
             monthlyTaskManager.resetMonthlyTasks();

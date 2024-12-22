@@ -28,4 +28,12 @@ public class TimeUtil {
         long diff = cal.getTimeInMillis() - now;
         return diff / 50;
     }
+
+    public static boolean isMoreThanAMonthAgo(long timestamp) {
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+        long now = System.currentTimeMillis();
+        cal.setTimeInMillis(timestamp);
+        cal.add(Calendar.MONTH,1);
+        return cal.getTimeInMillis() < now;
+    }
 }

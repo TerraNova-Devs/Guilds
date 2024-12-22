@@ -5,12 +5,14 @@ import de.mcterranova.guilds.database.dao.MonthlyTaskDao;
 import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.MonthlyTask;
 import de.mcterranova.guilds.model.TaskEventType;
+import de.mcterranova.guilds.util.TimeUtil;
 import io.th0rgal.oraxen.api.OraxenItems;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.time.Instant;
 import java.util.*;
 
 public class MonthlyTaskManager {
@@ -128,11 +130,8 @@ public class MonthlyTaskManager {
         Collections.shuffle(pool);
         MonthlyTask chosen = pool.get(0);
 
-        System.out.println("Chosen: " + chosen.getDescription());
-        // store in memory
         assignedTasks.put(guild.getName(), chosen);
 
-        // also store in DB
         monthlyTaskDao.assignMonthlyTask(guild.getName(), chosen);
     }
 
@@ -141,15 +140,30 @@ public class MonthlyTaskManager {
     }
 
     public void resetMonthlyTasks() {
+        Instant lastReset = monthlyTaskDao.getLastReset("MONTHLY");
+        if (lastReset == null) {
+            monthlyResetCore();
+            return;
+        }
+        long then = lastReset.toEpochMilli();
+        if (!TimeUtil.isMoreThanAMonthAgo(then)) {
+            plugin.getLogger().info("Less than 1 month since last daily reset. Skipping...");
+            return;
+        }
+        monthlyResetCore();
+    }
+
+    public void monthlyResetCore() {
         assignedTasks.clear();
         monthlyTaskPools.clear();
         monthlyTaskDao.resetMonthlyTasks();
         loadMonthlyTaskPoolsFromConfig();
 
+
         for (Guild guild : guildManager.getAllGuilds()) {
-            System.out.println("Assigning monthly task to " + guild.getType().toString());
             assignRandomMonthlyTask(guild);
         }
+        monthlyTaskDao.setLastReset("MONTHLY", Instant.now());
     }
 
     public void tryMonthlyResetOnStartup() {

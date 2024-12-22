@@ -15,7 +15,8 @@ public interface MonthlyTaskDao {
 
     void resetMonthlyTasks();
 
-    // or a method returning List<MonthlyTask> if each guild can have multiple
+    Instant getLastReset(String resetType);
+    void setLastReset(String resetType, Instant timestamp);
 
     // Insert/assign a monthly task to a guild
     void assignMonthlyTask(String guildName, MonthlyTask task);

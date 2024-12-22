@@ -22,7 +22,7 @@ public class MonthlyTaskRepository implements MonthlyTaskDao {
     public MonthlyTask loadMonthlyTask(String guildName) {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT description, material_or_mob, required_amount, points_reward, money_reward, 'BLOCK_BREAK' as event_type " +
+                     "SELECT description, material_or_mob, required_amount, points_reward, money_reward, event_type " +
                              "FROM guild_monthly_tasks WHERE guild_name=?"
              )) {
             ps.setString(1, guildName);
@@ -49,8 +49,8 @@ public class MonthlyTaskRepository implements MonthlyTaskDao {
         // INSERT INTO guild_monthly_tasks ...
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO guild_monthly_tasks (guild_name, description, material_or_mob, required_amount, points_reward, money_reward, assigned_date) " +
-                             "VALUES (?,?,?,?,?,?,CURDATE()) "
+                     "INSERT INTO guild_monthly_tasks (guild_name, description, material_or_mob, required_amount, points_reward, money_reward, event_type, assigned_date) " +
+                             "VALUES (?,?,?,?,?,?,?,CURDATE()) "
              )) {
             ps.setString(1, guildName);
             ps.setString(2, task.getDescription());
@@ -58,6 +58,7 @@ public class MonthlyTaskRepository implements MonthlyTaskDao {
             ps.setInt(4, task.getRequiredAmount());
             ps.setInt(5, task.getPointsReward());
             ps.setDouble(6, task.getMoneyReward());
+            ps.setString(7, task.getEventType().name());
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -178,6 +179,7 @@ public class MonthlyTaskRepository implements MonthlyTaskDao {
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("DELETE FROM guild_monthly_progress");
             stmt.executeUpdate("DELETE FROM guild_monthly_claim");
+            stmt.executeUpdate("DELETE FROM guild_monthly_tasks");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -203,5 +205,44 @@ public class MonthlyTaskRepository implements MonthlyTaskDao {
             e.printStackTrace();
         }
         return monthlyTasks;
+    }
+
+    @Override
+    public Instant getLastReset(String resetType) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT last_reset FROM task_resets WHERE reset_type=?"
+             )) {
+            ps.setString(1, resetType);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Timestamp ts = rs.getTimestamp("last_reset");
+                    if (ts != null) {
+                        return ts.toInstant();
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void setLastReset(String resetType, Instant timestamp) {
+        // If row exists -> update, else insert
+        try (Connection conn = dataSource.getConnection()) {
+            // Upsert pattern
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO task_resets (reset_type, last_reset) VALUES (?,?) " +
+                            "ON DUPLICATE KEY UPDATE last_reset=VALUES(last_reset)"
+            )) {
+                ps.setString(1, resetType);
+                ps.setTimestamp(2, Timestamp.from(timestamp));
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

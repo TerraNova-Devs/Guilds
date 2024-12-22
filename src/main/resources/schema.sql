@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS guild_monthly_tasks (
     points_reward INT NOT NULL,
     money_reward DOUBLE NOT NULL,
     assigned_date DATE NOT NULL,
+    event_type VARCHAR(50) NOT NULL,
     PRIMARY KEY (guild_name, description),
     FOREIGN KEY (guild_name) REFERENCES guilds(guild_name) ON DELETE CASCADE
 );

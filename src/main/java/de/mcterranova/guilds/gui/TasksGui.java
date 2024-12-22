@@ -105,7 +105,6 @@ public class TasksGui extends RoseGUI {
             addItem(19 + i, dailyItems[i]);
         }
 
-        System.out.println("Monthly task: " + monthlyTask.getDescription());
         // 5) Monatliche Task
         if (monthlyTask != null) {
             int guildProgress = monthlyTaskManager.getGuildProgress(guild, monthlyTask.getDescription());
@@ -150,7 +149,7 @@ public class TasksGui extends RoseGUI {
 
         if (!completed) {
             // Zeige Fortschrittsbalken
-            return buildProgressItem(displayName, progress, required, false);
+            return buildProgressItem(dt, displayName, progress, required, false);
         } else {
             // Aufgabe ist abgeschlossen
             if (claimed) {
@@ -198,7 +197,7 @@ public class TasksGui extends RoseGUI {
 
         if (!completed) {
             // Noch nicht abgeschlossen -> gildenweiter Fortschritt
-            RoseItem item = buildProgressItem(displayName, guildProgress, required, true);
+            RoseItem item = buildProgressItem(mt, displayName, guildProgress, required, true);
             // wir fügen noch eine Zeile Lore hinzu, um zu kennzeichnen, dass es Gildenfortschritt ist
             item.stack.lore().add(Component.text("§7Gildenfortschritt"));
             return item;
@@ -236,11 +235,7 @@ public class TasksGui extends RoseGUI {
         }
     }
 
-    /**
-     * Baut ein Item mit einem Fortschrittsbalken (bis zu 10 Segmenten).
-     * Für daily: personal progress, für monthly: guildProgress (via Parameter).
-     */
-    private RoseItem buildProgressItem(String displayName, int progress, int required, boolean isMonthly) {
+    private RoseItem buildProgressItem(DailyTask dt, String displayName, int progress, int required, boolean isMonthly) {
         List<Component> lore = new ArrayList<>();
         int totalSegments = 10;
         double ratio = Math.min((double) progress / required, 1.0);
@@ -254,6 +249,30 @@ public class TasksGui extends RoseGUI {
 
         lore.add(Component.text(progressBar.toString()));
         lore.add(Component.text("§7" + progress + "§f/§7" + required + "  (§a" + percent + "%§f)"));
+        lore.add(Component.text("§3+ " + (int)dt.getMoneyReward() + " Silber"));
+
+        return new RoseItem.Builder()
+                .material(Material.BOOK)
+                .displayName(Component.text(displayName))
+                .addLore(lore.toArray(new Component[0]))
+                .build();
+    }
+
+    private RoseItem buildProgressItem(MonthlyTask mt, String displayName, int progress, int required, boolean isMonthly) {
+        List<Component> lore = new ArrayList<>();
+        int totalSegments = 10;
+        double ratio = Math.min((double) progress / required, 1.0);
+        int filledSegments = (int) (ratio * totalSegments);
+
+        StringBuilder progressBar = new StringBuilder();
+        for (int seg = 0; seg < totalSegments; seg++) {
+            progressBar.append(seg < filledSegments ? "§a■" : "§7■");
+        }
+        int percent = (int)(ratio * 100);
+
+        lore.add(Component.text(progressBar.toString()));
+        lore.add(Component.text("§7" + progress + "§f/§7" + required + "  (§a" + percent + "%§f)"));
+        lore.add(Component.text("§a+ " + mt.getMoneyReward() + " Silber"));
 
         return new RoseItem.Builder()
                 .material(Material.BOOK)
