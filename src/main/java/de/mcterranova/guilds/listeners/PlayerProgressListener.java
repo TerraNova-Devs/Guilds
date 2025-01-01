@@ -52,11 +52,11 @@ public class PlayerProgressListener implements Listener {
                 return;
             }
             taskManager.handleEvent(TaskEventType.HARVEST, player, mat.name(), 1);
-            monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.HARVEST, mat.name(), 1);
+            monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.HARVEST, mat.name(), 1, player.getUniqueId());
         }
 
         taskManager.handleEvent(TaskEventType.BLOCK_BREAK, player, mat.name(), 1);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.BLOCK_BREAK, mat.name(), 1);
+        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.BLOCK_BREAK, mat.name(), 1, player.getUniqueId());
 
     }
 
@@ -101,7 +101,7 @@ public class PlayerProgressListener implements Listener {
         }
 
         taskManager.handleEvent(TaskEventType.CRAFT_ITEM, player, mat.name(), amountCrafted);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.CRAFT_ITEM, mat.name(), amountCrafted);
+        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.CRAFT_ITEM, mat.name(), amountCrafted, player.getUniqueId());
     }
 
     /**
@@ -144,7 +144,7 @@ public class PlayerProgressListener implements Listener {
         int amount = event.getItemAmount();
 
         taskManager.handleEvent(TaskEventType.SMELT, player, mat.name(), amount);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.SMELT, mat.name(), amount);
+        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.SMELT, mat.name(), amount, player.getUniqueId());
     }
 
     // ------------------------------------------------------------------------
@@ -172,7 +172,7 @@ public class PlayerProgressListener implements Listener {
                     int amount = caughtStack.getAmount();
 
                     taskManager.handleEvent(TaskEventType.FISH, player, caughtMat.name(), amount);
-                    monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.FISH, caughtMat.name(), amount);
+                    monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.FISH, caughtMat.name(), amount, player.getUniqueId());
                 }
                 break;
             }
@@ -192,6 +192,6 @@ public class PlayerProgressListener implements Listener {
         EntityType type = event.getEntityType();
 
         taskManager.handleEvent(TaskEventType.ENTITY_KILL, player, type.name(), 1);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.ENTITY_KILL, type.name(), 1);
+        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.ENTITY_KILL, type.name(), 1, player.getUniqueId());
     }
 }

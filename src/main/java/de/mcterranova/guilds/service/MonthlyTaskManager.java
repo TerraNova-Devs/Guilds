@@ -13,12 +13,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 public class MonthlyTaskManager {
 
     private final MonthlyTaskDao monthlyTaskDao;
     private final GuildManager guildManager;
+    private final RewardManager rewardManager;
     private final Guilds plugin;
 
     private Map<String, List<MonthlyTask>> monthlyTaskPools = new HashMap<>();
@@ -29,68 +32,16 @@ public class MonthlyTaskManager {
         this.plugin = plugin;
         this.monthlyTaskDao = monthlyTaskDao;
         this.guildManager = guildManager;
+        this.rewardManager = plugin.getRewardManager();
         loadMonthlyTaskPoolsFromConfig();
     }
 
-    public void handleMonthlyEvent(Guild guild, TaskEventType eventType, String materialOrMob, int amount) {
-        MonthlyTask mt = monthlyTaskDao.loadMonthlyTask(guild.getName());
-        if (mt == null) return;
-        if (mt.getEventType() != eventType) return;
-        if (!mt.getMaterialOrMob().equalsIgnoreCase(materialOrMob)) return;
+    public void onStartup() {
+        // If the server was offline at month boundary, check and do a reset
+        checkIfNewMonth();
 
-        if (monthlyTaskDao.isTaskCompleted(guild.getName(), mt.getDescription())) {
-            return;
-        }
-
-        int oldProg = monthlyTaskDao.getGuildProgress(guild.getName(), mt.getDescription());
-        int newProg = oldProg + amount;
-
-        monthlyTaskDao.updateGuildProgress(guild.getName(), mt.getDescription(), newProg);
-
-        if (newProg >= mt.getRequiredAmount()) {
-            monthlyTaskDao.markTaskCompleted(guild.getName(), mt.getDescription());
-            Bukkit.broadcastMessage("§aDie Gilde " + guild.getName() +
-                    " hat ihre monatliche Aufgabe abgeschlossen: " + mt.getDescription());
-        }
-    }
-
-    public boolean claimMonthlyReward(Guild guild, String description, UUID playerId) {
-        if (!monthlyTaskDao.isTaskCompleted(guild.getName(), description)) {
-            return false;
-        }
-
-        if (monthlyTaskDao.isRewardClaimed(guild.getName(), description, playerId)) {
-            return false;
-        }
-
-        monthlyTaskDao.markRewardClaimed(guild.getName(), description, playerId);
-
-        Player p = Bukkit.getPlayer(playerId);
-        MonthlyTask mt = monthlyTaskDao.loadMonthlyTask(guild.getName());
-        if (mt != null && mt.getDescription().equals(description)) {
-            double money = mt.getMoneyReward();
-            ItemStack silver = OraxenItems.getItemById("terranova_silver").build();
-            silver.setAmount((int) money);
-            p.getInventory().addItem(silver);
-            p.sendMessage("§aDu hast die Belohnung für '" + mt.getDescription() + "' erhalten!");
-        }
-        return true;
-    }
-
-    public MonthlyTask getMonthlyTask(Guild guild) {
-        return monthlyTaskDao.loadMonthlyTask(guild.getName());
-    }
-
-    public int getGuildProgress(Guild guild, String description) {
-        return monthlyTaskDao.getGuildProgress(guild.getName(), description);
-    }
-
-    public boolean isTaskCompleted(Guild guild, String description) {
-        return monthlyTaskDao.isTaskCompleted(guild.getName(), description);
-    }
-
-    public boolean isRewardClaimed(Guild guild, String description, UUID playerId) {
-        return monthlyTaskDao.isRewardClaimed(guild.getName(), description, playerId);
+        // Then schedule an event for the next month boundary
+        scheduleMonthlyReset();
     }
 
     public void loadMonthlyTaskPoolsFromConfig() {
@@ -135,24 +86,6 @@ public class MonthlyTaskManager {
         monthlyTaskDao.assignMonthlyTask(guild.getName(), chosen);
     }
 
-    public MonthlyTask loadMonthlyTask(String guildName) {
-        return monthlyTaskDao.loadMonthlyTask(guildName);
-    }
-
-    public void resetMonthlyTasks() {
-        Instant lastReset = monthlyTaskDao.getLastReset("MONTHLY");
-        if (lastReset == null) {
-            monthlyResetCore();
-            return;
-        }
-        long then = lastReset.toEpochMilli();
-        if (!TimeUtil.isMoreThanAMonthAgo(then)) {
-            plugin.getLogger().info("Less than 1 month since last daily reset. Skipping...");
-            return;
-        }
-        monthlyResetCore();
-    }
-
     public void monthlyResetCore() {
         assignedTasks.clear();
         monthlyTaskPools.clear();
@@ -166,10 +99,140 @@ public class MonthlyTaskManager {
         monthlyTaskDao.setLastReset("MONTHLY", Instant.now());
     }
 
-    public void tryMonthlyResetOnStartup() {
-        assignedTasks = monthlyTaskDao.loadMonthlyTasks();
-        if (assignedTasks.isEmpty()) {
-            resetMonthlyTasks();
+    public void scheduleMonthlyReset() {
+        long ticksUntilNextMonth = TimeUtil.getTicksUntilNextMonth();
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            // 1) Evaluate the monthly winner
+            rewardManager.evaluateMonthlyWinner();
+
+            // 2) Actually do the reset
+            monthlyResetCore();
+            monthlyTaskDao.setLastReset("MONTHLY", Instant.now());
+
+            // 3) Schedule the *next* month boundary
+            scheduleMonthlyReset();
+        }, ticksUntilNextMonth);
+    }
+
+    public void checkIfNewMonth() {
+        Instant lastResetInstant = monthlyTaskDao.getLastReset("MONTHLY");
+        if (lastResetInstant == null) {
+            monthlyResetCore();
+            monthlyTaskDao.setLastReset("MONTHLY", Instant.now());
+            return;
+        }
+
+        LocalDate lastResetDate = lastResetInstant.atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate now = LocalDate.now();
+
+        boolean sameYear  = now.getYear() == lastResetDate.getYear();
+        boolean sameMonth = now.getMonthValue() == lastResetDate.getMonthValue();
+        if (!sameYear || !sameMonth) {
+            // We are in a new month
+            monthlyResetCore();
+            monthlyTaskDao.setLastReset("MONTHLY", Instant.now());
         }
     }
+
+
+    /**
+     * Handles events that contribute to a guild's monthly task.
+     * Updates individual player progress and checks for task completion.
+     *
+     * @param guild       The guild involved
+     * @param eventType   The type of event contributing to the task
+     * @param materialOrMob The material or mob associated with the task
+     * @param amount      The amount contributed by the event
+     * @param playerId    The UUID of the player contributing
+     */
+    public void handleMonthlyEvent(Guild guild, TaskEventType eventType, String materialOrMob, int amount, UUID playerId) {
+        MonthlyTask mt = monthlyTaskDao.loadMonthlyTask(guild.getName());
+        if (mt == null) {
+            plugin.getLogger().warning("No monthly task assigned to guild: " + guild.getName());
+            return;
+        }
+        if (mt.getEventType() != eventType) return;
+        if (!mt.getMaterialOrMob().equalsIgnoreCase(materialOrMob)) return;
+
+        if (monthlyTaskDao.isTaskCompleted(guild.getName(), mt.getDescription())) {
+            // Task already completed; no further action needed
+            return;
+        }
+
+        // Update the player's individual progress
+        monthlyTaskDao.updatePlayerMonthlyProgress(guild.getName(), mt.getDescription(), playerId, amount);
+        plugin.getLogger().info("Updated progress for player " + playerId + " on task '" + mt.getDescription() + "' for guild: " + guild.getName());
+
+        // Check if the entire guild has completed the monthly task
+        int playerProgress = monthlyTaskDao.getGuildProgress(guild.getName(), mt.getDescription());
+        if (playerProgress >= mt.getRequiredAmount()) {
+            monthlyTaskDao.markPlayerMonthlyTaskCompleted(guild.getName(), mt.getDescription());
+            Bukkit.broadcastMessage("§aThe guild " + guild.getName() +
+                    " has completed their monthly task: " + mt.getDescription());
+            plugin.getLogger().info("Guild " + guild.getName() + " has completed their monthly task: " + mt.getDescription());
+        }
+    }
+
+    /**
+     * Allows a player to claim their monthly reward upon task completion.
+     *
+     * @param guild   The guild
+     * @param description The description of the monthly task
+     * @param playerId    The UUID of the player claiming the reward
+     * @return true if the reward was successfully claimed; false otherwise
+     */
+    public boolean claimMonthlyReward(Guild guild, String description, UUID playerId) {
+        // Check if the guild has completed the task
+        if (!monthlyTaskDao.isTaskCompleted(guild.getName(), description)) {
+            return false;
+        }
+
+        // Check if the player has already claimed the reward
+        if (monthlyTaskDao.isRewardClaimed(guild.getName(), description, playerId)) {
+            return false;
+        }
+
+        // Mark the reward as claimed for the player
+        monthlyTaskDao.markRewardClaimed(guild.getName(), description, playerId);
+        plugin.getLogger().info("Player " + playerId + " has claimed the reward for task '" + description + "' in guild: " + guild.getName());
+
+        // Grant the reward to the player
+        Player p = Bukkit.getPlayer(playerId);
+        MonthlyTask mt = monthlyTaskDao.loadMonthlyTask(guild.getName());
+        if (mt != null && mt.getDescription().equals(description) && p != null && p.isOnline()) {
+            double money = mt.getMoneyReward();
+            ItemStack silver = OraxenItems.getItemById("terranova_silver").build();
+            silver.setAmount((int) money); // Assuming money is represented as an item quantity
+            p.getInventory().addItem(silver);
+            p.sendMessage("§aYou have received the reward for '" + mt.getDescription() + "'!");
+            plugin.getLogger().info("Reward granted to player " + playerId + " for task '" + description + "'.");
+            return true;
+        }
+
+        // If the player is offline or task details are missing
+        plugin.getLogger().warning("Failed to grant reward to player " + playerId + " for task '" + description + "'. Player may be offline.");
+        return false;
+    }
+
+    public MonthlyTask getMonthlyTask(Guild guild) {
+        return monthlyTaskDao.loadMonthlyTask(guild.getName());
+    }
+
+    public int getGuildProgress(Guild guild, String description) {
+        return monthlyTaskDao.getGuildProgress(guild.getName(), description);
+    }
+
+    public boolean isTaskCompleted(Guild guild, String description) {
+        return monthlyTaskDao.isTaskCompleted(guild.getName(), description);
+    }
+
+    public boolean isRewardClaimed(Guild guild, String description, UUID playerId) {
+        return monthlyTaskDao.isRewardClaimed(guild.getName(), description, playerId);
+    }
+
+    public MonthlyTask loadMonthlyTask(String guildName) {
+        return monthlyTaskDao.loadMonthlyTask(guildName);
+    }
+
 }

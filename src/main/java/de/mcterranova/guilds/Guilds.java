@@ -11,7 +11,6 @@ import de.mcterranova.guilds.database.repository.TaskRepository;
 import de.mcterranova.guilds.listeners.NPCClickListener;
 import de.mcterranova.guilds.listeners.PlayerProgressListener;
 import de.mcterranova.guilds.service.*;
-import de.mcterranova.guilds.util.TimeUtil;
 import de.mcterranova.terranovaLib.roseGUI.RoseGUIListener;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -68,18 +67,8 @@ public class Guilds extends JavaPlugin {
             npcManager.init();
         }, 20L);
 
-        taskManager.tryDailyResetOnStartup();
-        monthlyTaskManager.tryMonthlyResetOnStartup();
-
-        long ticksUntilMidnight = TimeUtil.getTicksUntilMidnight();
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            taskManager.dailyReset();
-        }, ticksUntilMidnight, 24L * 60L * 60L * 20L);
-
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            rewardManager.evaluateMonthlyWinner();
-            monthlyTaskManager.resetMonthlyTasks();
-        }, TimeUtil.getTicksUntilMonthEnd(), 30L * 24L * 60L * 60L * 20L);
+        taskManager.onStartup();
+        monthlyTaskManager.onStartup();
 
         getLogger().info("GuildPlugin wurde aktiviert.");
     }
@@ -149,4 +138,5 @@ public class Guilds extends JavaPlugin {
     public MonthlyTaskManager getMonthlyTaskManager() {
         return monthlyTaskManager;
     }
+
 }

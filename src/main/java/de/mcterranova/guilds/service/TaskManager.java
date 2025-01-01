@@ -6,6 +6,7 @@ import de.mcterranova.guilds.model.DailyTask;
 import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.GuildType;
 import de.mcterranova.guilds.model.TaskEventType;
+import de.mcterranova.guilds.util.TimeUtil;
 import io.th0rgal.oraxen.api.OraxenItems;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
@@ -13,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 public class TaskManager {
@@ -26,50 +29,33 @@ public class TaskManager {
         this.taskDao = taskDao;
     }
 
+    public void onStartup() {
+        // 1) Check if new day => do the reset if needed
+        checkIfNewDay();
+
+        // 2) Schedule the next midnight for daily reset
+        scheduleDailyReset();
+    }
+
     public void tryDailyResetOnStartup() {
-        if (taskDao.dailyTasksExistForToday()) {
-            plugin.getLogger().info("Daily tasks already assigned for today. Skipping reset...");
-            return;
-        }
-        // If we want a 24-hour check:
-        Instant lastReset = taskDao.getLastReset("DAILY");
-        if (lastReset == null) {
-            // No record => do a reset now
+        if (!taskDao.dailyTasksExistForToday()) {
             dailyResetCore();
             taskDao.setLastReset("DAILY", Instant.now());
-            return;
+        } else {
+            plugin.getLogger().info("Daily tasks already assigned for today. Skipping reset on startup...");
         }
-        long now = System.currentTimeMillis();
-        long then = lastReset.toEpochMilli();
-        if ((now - then) < 24L * 60L * 60L * 1000L) {
-            plugin.getLogger().info("Less than 24h since last daily reset. Skipping...");
-            return;
-        }
-
-        // Otherwise older than 24h => reset
-        dailyResetCore();
-        taskDao.setLastReset("DAILY", Instant.now());
     }
 
     /**
      * Called by the midnight scheduler to do a daily reset if needed.
      */
     public void dailyReset() {
-        if (taskDao.dailyTasksExistForToday()) {
-            plugin.getLogger().info("Midnight run: tasks for today exist. Skipping daily reset...");
-            return;
+        if (!taskDao.dailyTasksExistForToday()) {
+            dailyResetCore();
+            taskDao.setLastReset("DAILY", Instant.now());
+        } else {
+            plugin.getLogger().info("Midnight run: tasks for today already exist. Skipping daily reset...");
         }
-        long now = System.currentTimeMillis();
-        Instant lastReset = taskDao.getLastReset("DAILY");
-        if (lastReset != null) {
-            if ((now - lastReset.toEpochMilli()) < 24L*60L*60L*1000L) {
-                plugin.getLogger().info("Midnight run: less than 24h since last reset. Skipping...");
-                return;
-            }
-        }
-        // If we made it here => do reset
-        dailyResetCore();
-        taskDao.setLastReset("DAILY", Instant.now());
     }
 
     /**
@@ -89,6 +75,19 @@ public class TaskManager {
         }
         plugin.getLogger().info("Assigned new daily tasks to all guilds.");
     }
+
+    public void assignDailyTasksForAllGuildsIfMissing() {
+        for (Guild g : guildManager.getAllGuilds()) {
+            List<DailyTask> existing = taskDao.loadDailyTasksForGuild(g.getName());
+            if (existing.isEmpty()) {
+                List<DailyTask> pool = loadTaskPoolForType(g.getType());
+                List<DailyTask> dailySelection = pickRandomTasks(pool, 3);
+                taskDao.assignDailyTasksForGuild(g.getName(), dailySelection);
+                plugin.getLogger().info("Assigned daily tasks to " + g.getName() + " mid-cycle.");
+            }
+        }
+    }
+
 
     public void handleEvent(TaskEventType eventType, Player player, String matOrMob, int amount) {
         Guild guild = guildManager.getGuildByPlayer(player.getUniqueId());
@@ -187,5 +186,36 @@ public class TaskManager {
         List<DailyTask> copy = new ArrayList<>(pool);
         Collections.shuffle(copy);
         return copy.subList(0, Math.min(count, copy.size()));
+    }
+
+    public void checkIfNewDay() {
+        Instant lastResetInstant = taskDao.getLastReset("DAILY");
+        LocalDate today = LocalDate.now();
+
+        if (lastResetInstant == null) {
+            // No record => first time => do a reset
+            dailyResetCore();
+            taskDao.setLastReset("DAILY", Instant.now());
+            return;
+        }
+
+        LocalDate lastResetDate = lastResetInstant.atZone(ZoneId.systemDefault()).toLocalDate();
+
+        if (!today.isEqual(lastResetDate)) {
+            // Means the day changed
+            dailyResetCore();
+            taskDao.setLastReset("DAILY", Instant.now());
+        }
+    }
+
+    public void scheduleDailyReset() {
+        long ticksUntilMidnight = TimeUtil.getTicksUntilMidnight();
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            dailyResetCore();
+            taskDao.setLastReset("DAILY", Instant.now());
+
+            scheduleDailyReset();
+        }, ticksUntilMidnight);
     }
 }

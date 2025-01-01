@@ -63,9 +63,10 @@ CREATE TABLE IF NOT EXISTS guild_monthly_tasks (
 CREATE TABLE IF NOT EXISTS guild_monthly_progress (
     guild_name VARCHAR(100) NOT NULL,
     description VARCHAR(255) NOT NULL,
+    player_uuid VARCHAR(36) NOT NULL,
     progress INT NOT NULL DEFAULT 0,
     completed_at TIMESTAMP NULL DEFAULT NULL,
-    PRIMARY KEY (guild_name, description),
+    PRIMARY KEY (guild_name, description, player_uuid),
     FOREIGN KEY (guild_name, description) REFERENCES guild_monthly_tasks(guild_name, description) ON DELETE CASCADE
 );
 

@@ -3,6 +3,7 @@ package de.mcterranova.guilds.commands;
 import de.mcterranova.guilds.Guilds;
 import de.mcterranova.guilds.model.GuildType;
 import de.mcterranova.guilds.service.GuildManager;
+import de.mcterranova.guilds.service.TaskManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,10 +13,12 @@ import org.bukkit.entity.Player;
 public class GuildAdminCommand implements CommandExecutor {
     private Guilds plugin;
     private GuildManager guildManager;
+    private TaskManager taskManager;
 
     public GuildAdminCommand(Guilds plugin, GuildManager guildManager) {
         this.plugin = plugin;
         this.guildManager = guildManager;
+        this.taskManager = plugin.getTaskManager();
     }
 
     @Override
@@ -41,6 +44,7 @@ public class GuildAdminCommand implements CommandExecutor {
             try {
                 GuildType type = GuildType.valueOf(typeStr);
                 guildManager.createGuild(guildName, type);
+                taskManager.assignDailyTasksForAllGuildsIfMissing();
                 sender.sendMessage("§aGuild " + guildName + " created with type " + type + ".");
             } catch (IllegalArgumentException e) {
                 sender.sendMessage("§cInvalid guild type!");
