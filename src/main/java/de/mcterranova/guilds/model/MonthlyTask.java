@@ -1,12 +1,12 @@
 package de.mcterranova.guilds.model;
 
 public class MonthlyTask {
-    private String description;
-    private String materialOrMob;
-    private int requiredAmount;
-    private int pointsReward;
-    private double moneyReward;
-    private TaskEventType eventType;
+    private final String description;
+    private final String materialOrMob;
+    private final int requiredAmount;
+    private final int pointsReward;
+    private final double moneyReward;
+    private final TaskEventType eventType;
 
     public MonthlyTask(String description, String materialOrMob, int requiredAmount,
                        int pointsReward, double moneyReward, TaskEventType eventType) {

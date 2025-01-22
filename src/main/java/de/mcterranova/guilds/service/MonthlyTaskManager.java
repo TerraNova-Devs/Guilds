@@ -24,9 +24,9 @@ public class MonthlyTaskManager {
     private final RewardManager rewardManager;
     private final Guilds plugin;
 
-    private Map<String, List<MonthlyTask>> monthlyTaskPools = new HashMap<>();
+    private final Map<String, List<MonthlyTask>> monthlyTaskPools = new HashMap<>();
 
-    private Map<String, MonthlyTask> assignedTasks = new HashMap<>();
+    private final Map<String, MonthlyTask> assignedTasks = new HashMap<>();
 
     public MonthlyTaskManager(Guilds plugin, MonthlyTaskDao monthlyTaskDao, GuildManager guildManager) {
         this.plugin = plugin;
@@ -110,7 +110,7 @@ public class MonthlyTaskManager {
             monthlyResetCore();
             monthlyTaskDao.setLastReset("MONTHLY", Instant.now());
 
-            // 3) Schedule the *next* month boundary
+            // 3) Schedule the next month boundary
             scheduleMonthlyReset();
         }, ticksUntilNextMonth);
     }
@@ -165,9 +165,10 @@ public class MonthlyTaskManager {
         plugin.getLogger().info("Updated progress for player " + playerId + " on task '" + mt.getDescription() + "' for guild: " + guild.getName());
 
         // Check if the entire guild has completed the monthly task
-        int playerProgress = monthlyTaskDao.getGuildProgress(guild.getName(), mt.getDescription());
-        if (playerProgress >= mt.getRequiredAmount()) {
+        int guildProgress = monthlyTaskDao.getGuildProgress(guild.getName(), mt.getDescription());
+        if (guildProgress >= mt.getRequiredAmount()) {
             monthlyTaskDao.markPlayerMonthlyTaskCompleted(guild.getName(), mt.getDescription());
+            guildManager.updateGuildPoints(guild.getName(), mt.getPointsReward());
             Bukkit.broadcastMessage("§aThe guild " + guild.getName() +
                     " has completed their monthly task: " + mt.getDescription());
             plugin.getLogger().info("Guild " + guild.getName() + " has completed their monthly task: " + mt.getDescription());
@@ -221,6 +222,10 @@ public class MonthlyTaskManager {
 
     public int getGuildProgress(Guild guild, String description) {
         return monthlyTaskDao.getGuildProgress(guild.getName(), description);
+    }
+
+    public int getPlayerProgress(Guild guild, String description, UUID uuid) {
+        return monthlyTaskDao.getPlayerMonthlyProgress(guild.getName(), description, uuid);
     }
 
     public boolean isTaskCompleted(Guild guild, String description) {

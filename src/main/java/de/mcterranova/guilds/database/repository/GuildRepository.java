@@ -3,6 +3,7 @@ package de.mcterranova.guilds.database.repository;
 import de.mcterranova.guilds.database.ConnectionPool;
 import de.mcterranova.guilds.database.dao.GuildDao;
 import de.mcterranova.guilds.model.Guild;
+import de.mcterranova.guilds.model.GuildMember;
 import de.mcterranova.guilds.model.GuildType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -46,7 +47,7 @@ public class GuildRepository implements GuildDao {
                     }
                 }
 
-                List<UUID> members = getGuildMembers(name, conn);
+                List<GuildMember> members = getGuildMembers(name, conn);
                 guilds.add(new Guild(name, points, members, type, hq));
             }
         } catch (Exception e) {
@@ -55,19 +56,32 @@ public class GuildRepository implements GuildDao {
         return guilds;
     }
 
-    private List<UUID> getGuildMembers(String guildName, Connection conn) {
-        List<UUID> members = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT player_uuid FROM guild_members WHERE guild_name=?")) {
+    private List<GuildMember> getGuildMembers(String guildName, Connection conn) {
+        List<GuildMember> members = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement("SELECT player_uuid, contributed_points FROM guild_members WHERE guild_name=?")) {
             ps.setString(1, guildName);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    members.add(UUID.fromString(rs.getString("player_uuid")));
+                    members.add(new GuildMember(UUID.fromString(rs.getString("player_uuid")), rs.getInt("contributed_points")));
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return members;
+    }
+
+    @Override
+    public void updatePlayerContribution(String guildName, GuildMember member) {
+        try (Connection conn = pool.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE guild_members SET contributed_points=? WHERE guild_name=? AND player_uuid=?")) {
+            ps.setInt(1, member.getContributedPoints());
+            ps.setString(2, guildName);
+            ps.setString(3, member.getUuid().toString());
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -93,7 +107,7 @@ public class GuildRepository implements GuildDao {
                         }
                     }
 
-                    List<UUID> members = getGuildMembers(name, conn);
+                    List<GuildMember> members = getGuildMembers(name, conn);
                     return new Guild(name, points, members, type, hq);
                 }
             }

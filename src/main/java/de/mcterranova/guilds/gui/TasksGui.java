@@ -36,7 +36,7 @@ public class TasksGui extends RoseGUI {
     private final List<DailyTask> dailyTasks;
 
     // Monatliche Gilden-Task (falls vorhanden)
-    private MonthlyTask monthlyTask;
+    private final MonthlyTask monthlyTask;
 
     // Manager für tägliche und monatliche Logik
     private final TaskManager taskManager;
@@ -108,11 +108,12 @@ public class TasksGui extends RoseGUI {
         // 5) Monatliche Task
         if (monthlyTask != null) {
             int guildProgress = monthlyTaskManager.getGuildProgress(guild, monthlyTask.getDescription());
+            int playerProgress = monthlyTaskManager.getPlayerProgress(guild, monthlyTask.getDescription(), playerId);
             int required = monthlyTask.getRequiredAmount();
             boolean completed = monthlyTaskManager.isTaskCompleted(guild, monthlyTask.getDescription());
             boolean claimedByThisPlayer = monthlyTaskManager.isRewardClaimed(guild, monthlyTask.getDescription(), playerId);
 
-            RoseItem monthlyItem = buildMonthlyTaskItem(monthlyTask, guildProgress, required, completed, claimedByThisPlayer);
+            RoseItem monthlyItem = buildMonthlyTaskItem(monthlyTask, guildProgress, playerProgress, required, completed, claimedByThisPlayer);
             // Slot 23 als Beispiel
             addItem(23, monthlyItem);
         }
@@ -189,7 +190,7 @@ public class TasksGui extends RoseGUI {
      * Baut ein Item für die MONATLICHE (gildenweite) Aufgabe,
      * das aber jeder Spieler EINMAL abholen kann.
      */
-    private RoseItem buildMonthlyTaskItem(MonthlyTask mt, int guildProgress, int required,
+    private RoseItem buildMonthlyTaskItem(MonthlyTask mt, int guildProgress, int playerProgress, int required,
                                           boolean completed, boolean claimedByThisPlayer) {
 
         String displayName = "§b(Monatlich) " + mt.getDescription();
@@ -197,9 +198,9 @@ public class TasksGui extends RoseGUI {
 
         if (!completed) {
             // Noch nicht abgeschlossen -> gildenweiter Fortschritt
-            RoseItem item = buildProgressItem(mt, displayName, guildProgress, required, true);
+            RoseItem item = buildProgressItem(mt, displayName, guildProgress, required, true, playerProgress);
             // wir fügen noch eine Zeile Lore hinzu, um zu kennzeichnen, dass es Gildenfortschritt ist
-            item.stack.lore().add(Component.text("§7Gildenfortschritt"));
+
             return item;
         } else {
             // Gilde hat das Ziel erreicht
@@ -258,7 +259,7 @@ public class TasksGui extends RoseGUI {
                 .build();
     }
 
-    private RoseItem buildProgressItem(MonthlyTask mt, String displayName, int progress, int required, boolean isMonthly) {
+    private RoseItem buildProgressItem(MonthlyTask mt, String displayName, int progress, int required, boolean isMonthly, int playerProgress) {
         List<Component> lore = new ArrayList<>();
         int totalSegments = 10;
         double ratio = Math.min((double) progress / required, 1.0);
@@ -270,7 +271,7 @@ public class TasksGui extends RoseGUI {
         }
         int percent = (int)(ratio * 100);
 
-        lore.add(Component.text(progressBar.toString()));
+        lore.add(Component.text(progressBar + " ☆ " + playerProgress + " Punkte durch dich."));
         lore.add(Component.text("§7" + progress + "§f/§7" + required + "  (§a" + percent + "%§f)"));
         lore.add(Component.text("§a+ " + mt.getMoneyReward() + " Silber"));
 

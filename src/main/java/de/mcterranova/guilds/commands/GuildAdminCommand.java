@@ -11,9 +11,9 @@ import org.bukkit.entity.Player;
 
 
 public class GuildAdminCommand implements CommandExecutor {
-    private Guilds plugin;
-    private GuildManager guildManager;
-    private TaskManager taskManager;
+    private final Guilds plugin;
+    private final GuildManager guildManager;
+    private final TaskManager taskManager;
 
     public GuildAdminCommand(Guilds plugin, GuildManager guildManager) {
         this.plugin = plugin;
@@ -53,7 +53,7 @@ public class GuildAdminCommand implements CommandExecutor {
         }
 
         if (args[0].equalsIgnoreCase("sethq")) {
-            if (!(sender instanceof Player)) {
+            if (!(sender instanceof Player player)) {
                 sender.sendMessage("Only players can use this command.");
                 return true;
             }
@@ -61,7 +61,6 @@ public class GuildAdminCommand implements CommandExecutor {
                 sender.sendMessage("§cUsage: /guildadmin sethq <name>");
                 return true;
             }
-            Player player = (Player)sender;
             String guildName = args[1];
             var guild = guildManager.getGuildByName(guildName);
             if (guild == null) {

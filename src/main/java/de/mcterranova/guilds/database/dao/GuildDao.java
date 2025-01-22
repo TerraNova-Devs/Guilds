@@ -2,6 +2,7 @@ package de.mcterranova.guilds.database.dao;
 
 import de.mcterranova.guilds.model.DailyTask;
 import de.mcterranova.guilds.model.Guild;
+import de.mcterranova.guilds.model.GuildMember;
 import de.mcterranova.guilds.model.GuildType;
 
 import java.time.Instant;
@@ -18,4 +19,5 @@ public interface GuildDao {
     void createGuild(String guildName, GuildType type);
     void updateGuildHQ(String guildName, String worldName, double x, double y, double z);
     boolean isPlayerInAnyGuild(UUID playerId);
+    void updatePlayerContribution(String guildName, GuildMember member);
 }

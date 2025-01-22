@@ -7,7 +7,7 @@ import de.mcterranova.guilds.config.DatabaseConfig;
 import javax.sql.DataSource;
 
 public class ConnectionPool {
-    private HikariDataSource dataSource;
+    private final HikariDataSource dataSource;
 
     public ConnectionPool(DatabaseConfig dbConfig) {
         HikariConfig config = new HikariConfig();

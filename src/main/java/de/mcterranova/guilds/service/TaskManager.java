@@ -2,10 +2,7 @@ package de.mcterranova.guilds.service;
 
 import de.mcterranova.guilds.Guilds;
 import de.mcterranova.guilds.database.dao.TaskDao;
-import de.mcterranova.guilds.model.DailyTask;
-import de.mcterranova.guilds.model.Guild;
-import de.mcterranova.guilds.model.GuildType;
-import de.mcterranova.guilds.model.TaskEventType;
+import de.mcterranova.guilds.model.*;
 import de.mcterranova.guilds.util.TimeUtil;
 import io.th0rgal.oraxen.api.OraxenItems;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -19,9 +16,9 @@ import java.time.ZoneId;
 import java.util.*;
 
 public class TaskManager {
-    private Guilds plugin;
-    private GuildManager guildManager;
-    private TaskDao taskDao;
+    private final Guilds plugin;
+    private final GuildManager guildManager;
+    private final TaskDao taskDao;
 
     public TaskManager(Guilds plugin, GuildManager guildManager, TaskDao taskDao) {
         this.plugin = plugin;
@@ -113,7 +110,6 @@ public class TaskManager {
 
     public void completeTask(Guild guild, DailyTask task, Player player) {
         taskDao.markTaskCompleted(guild.getName(), task, player.getUniqueId());
-
         player.sendMessage("§aAufgabe abgeschlossen! " + task.getDescription());
     }
 
@@ -132,8 +128,11 @@ public class TaskManager {
         }
 
         int currentPoints = guild.getPoints();
+        GuildMember guildMember = guild.getMembers().stream().filter(member -> playerId.equals(member.getUuid())).findFirst().orElse(null);
+        guildMember.setContributedPoints(task.getPointsReward());
         guild.setPoints(currentPoints + task.getPointsReward());
         guildManager.updateGuildPoints(guild.getName(), currentPoints + task.getPointsReward());
+        guildManager.updatePlayerPoints(guild.getName(), guildMember);
 
         taskDao.markTaskClaimed(guild.getName(), task, playerId);
     }

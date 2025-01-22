@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS guilds (
 CREATE TABLE IF NOT EXISTS guild_members (
     guild_name VARCHAR(100) NOT NULL,
     player_uuid VARCHAR(36) NOT NULL,
+    contributed_points INT NOT NULL DEFAULT 0,
     PRIMARY KEY (guild_name, player_uuid),
     FOREIGN KEY (guild_name) REFERENCES guilds(guild_name) ON DELETE CASCADE
 );

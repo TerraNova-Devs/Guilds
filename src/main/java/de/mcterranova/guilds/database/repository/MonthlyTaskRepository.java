@@ -180,7 +180,6 @@ public class MonthlyTaskRepository implements MonthlyTaskDao {
             stmt.executeUpdate("DELETE FROM guild_monthly_progress");
             stmt.executeUpdate("DELETE FROM guild_monthly_claim");
             stmt.executeUpdate("DELETE FROM guild_monthly_tasks");
-            stmt.executeUpdate("DELETE FROM guild_monthly_player_progress"); // Also reset player contributions
         } catch (SQLException e) {
             e.printStackTrace();
         }

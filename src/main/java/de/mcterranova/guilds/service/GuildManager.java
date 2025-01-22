@@ -3,14 +3,15 @@ package de.mcterranova.guilds.service;
 import de.mcterranova.guilds.Guilds;
 import de.mcterranova.guilds.database.dao.GuildDao;
 import de.mcterranova.guilds.model.Guild;
+import de.mcterranova.guilds.model.GuildMember;
 import de.mcterranova.guilds.model.GuildType;
 
 import java.util.List;
 import java.util.UUID;
 
 public class GuildManager {
-    private Guilds plugin;
-    private GuildDao guildDao;
+    private final Guilds plugin;
+    private final GuildDao guildDao;
 
     public GuildManager(Guilds plugin, GuildDao guildDao) {
         this.plugin = plugin;
@@ -32,6 +33,8 @@ public class GuildManager {
     public void updateGuildPoints(String guildName, int points) {
         guildDao.updateGuildPoints(guildName, points);
     }
+
+    public void updatePlayerPoints(String guildName, GuildMember member){guildDao.updatePlayerContribution(guildName, member);}
 
     public void resetAllGuildPoints() {
         guildDao.resetAllGuildPoints();

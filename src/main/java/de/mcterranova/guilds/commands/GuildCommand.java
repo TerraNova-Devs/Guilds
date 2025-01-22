@@ -12,9 +12,9 @@ import org.bukkit.entity.Player;
 import java.util.List;
 
 public class GuildCommand implements CommandExecutor {
-    private Guilds plugin;
-    private GuildManager guildManager;
-    private TaskManager taskManager;
+    private final Guilds plugin;
+    private final GuildManager guildManager;
+    private final TaskManager taskManager;
 
     public GuildCommand(Guilds plugin, GuildManager guildManager, TaskManager taskManager) {
         this.plugin = plugin;
@@ -24,12 +24,11 @@ public class GuildCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String lbl, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage("Nur Spieler können diesen Befehl nutzen.");
             return true;
         }
 
-        Player player = (Player)sender;
         Guild guild = guildManager.getGuildByPlayer(player.getUniqueId());
         if (args.length == 0) {
             if (guild == null) {

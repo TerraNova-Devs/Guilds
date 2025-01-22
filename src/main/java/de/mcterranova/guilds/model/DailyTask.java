@@ -1,20 +1,18 @@
 package de.mcterranova.guilds.model;
 
-import org.bukkit.Material;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class DailyTask {
-    private String description;
-    private String materialOrMob;
-    private int requiredAmount;
-    private int pointsReward;
-    private double moneyReward;
-    private Map<UUID, Integer> progress = new HashMap<>();
+    private final String description;
+    private final String materialOrMob;
+    private final int requiredAmount;
+    private final int pointsReward;
+    private final double moneyReward;
+    private final Map<UUID, Integer> progress = new HashMap<>();
 
-    private TaskEventType eventType;
+    private final TaskEventType eventType;
 
     public DailyTask(String description, String matOrMob, int requiredAmount, int pointsReward, double moneyReward, TaskEventType eventType) {
         this.description = description;
