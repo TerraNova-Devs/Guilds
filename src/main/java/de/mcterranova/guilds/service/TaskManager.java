@@ -6,8 +6,10 @@ import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.GuildTask;
 import de.mcterranova.guilds.model.TaskEventType;
 import de.mcterranova.guilds.model.TaskPeriodicity;
+import io.th0rgal.oraxen.api.OraxenItems;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -208,18 +210,30 @@ public class TaskManager {
                     && task.getMaterialOrMob().equalsIgnoreCase(materialOrMob)) {
 
                 // If not already completed
-                if (!taskDao.isTaskCompleted(task.getTaskId(), player.getUniqueId())) {
+                if (task.getPeriodicity().equalsIgnoreCase(TaskPeriodicity.DAILY.name()) && !taskDao.isTaskCompleted(task.getTaskId(), player.getUniqueId())) {
                     int oldProgress = taskDao.getPlayerProgress(task.getTaskId(), player.getUniqueId());
                     int newProgress = oldProgress + amount;
 
                     // Update partial progress
                     taskDao.updatePlayerProgress(task.getTaskId(), player.getUniqueId(), amount);
 
-                    // If we reached or exceeded required => mark completed
                     if (newProgress >= task.getRequiredAmount()) {
                         taskDao.markTaskCompleted(task.getTaskId(), player.getUniqueId());
                         player.sendMessage("§aTask completed: " + task.getDescription());
                     }
+                } else if (!taskDao.isTaskCompleted(task.getTaskId(), guild.getName())) {
+                    int oldProgress = taskDao.getGuildProgress(task.getTaskId(), guild.getName());
+                    int newProgress = oldProgress + amount;
+
+                    // Update partial progress
+                    taskDao.updatePlayerProgress(task.getTaskId(), player.getUniqueId(), amount);
+
+                    if (newProgress >= task.getRequiredAmount()) {
+                        taskDao.markGuildTaskCompleted(task.getTaskId(), guild.getName());
+                        guildManager.updateGuildPoints(guild.getName(), guild.getPoints() + task.getPointsReward());
+                        plugin.getServer().broadcastMessage("§aGuild task completed: " + task.getDescription());
+                    }
+
                 }
             }
         }
@@ -264,10 +278,22 @@ public class TaskManager {
         Guild guild = guildManager.getGuildByName(task.getGuildName());
         if (guild != null) {
             int newTotal = guild.getPoints() + task.getPointsReward();
-            guildManager.updateGuildPoints(guild.getName(), newTotal);
 
-            // also track player's contributed points
-            guildManager.addPointsToPlayerContribution(guild.getName(), playerId, task.getPointsReward());
+            if(Objects.equals(task.getPeriodicity(), TaskPeriodicity.DAILY.name())) {
+                guildManager.updateGuildPoints(guild.getName(), newTotal);
+                guildManager.addPointsToPlayerContribution(guild.getName(), playerId, task.getPointsReward());
+            }
+
+            // Give the player the money reward
+            ItemStack moneyStack = OraxenItems.getItemById("terranova_silver").build();
+            moneyStack.setAmount((int) money);
+            var remaining = player.getInventory().addItem(moneyStack);
+            if (!remaining.isEmpty()) {
+                player.sendMessage("§cYour inventory is full! The reamining " + money + " dropped.");
+                for (ItemStack item : remaining.values()) {
+                    Bukkit.getWorld(player.getWorld().getName()).dropItem(player.getLocation(), item);
+                }
+            }
         }
     }
 

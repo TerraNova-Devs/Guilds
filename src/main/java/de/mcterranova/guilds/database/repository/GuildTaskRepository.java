@@ -159,6 +159,7 @@ public class GuildTaskRepository implements GuildTaskDao {
         return 0;
     }
 
+    @Override
     public boolean isTaskCompleted(int taskId, String guildName) {
         String sql = "SELECT completed_at FROM guild_task_progress WHERE task_id=? AND player_uuid IN " +
                 "(SELECT player_uuid FROM guild_members WHERE guild_name=?)";
@@ -177,6 +178,22 @@ public class GuildTaskRepository implements GuildTaskDao {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public void markGuildTaskCompleted(int taskId, String guildName) {
+        String sql = "UPDATE guild_task_progress SET completed_at=NOW() WHERE task_id=? AND player_uuid IN " +
+                "(SELECT player_uuid FROM guild_members WHERE guild_name=?)";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, taskId);
+            ps.setString(2, guildName);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     // ------------------

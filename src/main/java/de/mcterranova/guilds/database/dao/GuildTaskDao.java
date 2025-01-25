@@ -20,6 +20,7 @@ public interface GuildTaskDao {
     // -- Guild Progress
     boolean isTaskCompleted(int taskId, String guildName);
     int getGuildProgress(int taskId, String guildName);
+    void markGuildTaskCompleted(int taskId, String guildName);
 
     // -- Player Progress
     void updatePlayerProgress(int taskId, UUID playerId, int progressDelta);
