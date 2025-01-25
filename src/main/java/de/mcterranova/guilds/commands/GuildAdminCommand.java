@@ -9,7 +9,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-
 public class GuildAdminCommand implements CommandExecutor {
     private final Guilds plugin;
     private final GuildManager guildManager;
@@ -18,7 +17,7 @@ public class GuildAdminCommand implements CommandExecutor {
     public GuildAdminCommand(Guilds plugin, GuildManager guildManager) {
         this.plugin = plugin;
         this.guildManager = guildManager;
-        this.taskManager = plugin.getTaskManager();
+        this.taskManager = plugin.getTaskManager(); // single unified TaskManager
     }
 
     @Override
@@ -44,7 +43,6 @@ public class GuildAdminCommand implements CommandExecutor {
             try {
                 GuildType type = GuildType.valueOf(typeStr);
                 guildManager.createGuild(guildName, type);
-                taskManager.assignDailyTasksForAllGuildsIfMissing();
                 sender.sendMessage("§aGuild " + guildName + " created with type " + type + ".");
             } catch (IllegalArgumentException e) {
                 sender.sendMessage("§cInvalid guild type!");

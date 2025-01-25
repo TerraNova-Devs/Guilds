@@ -1,6 +1,5 @@
 package de.mcterranova.guilds.service;
 
-import de.mcterranova.guilds.Guilds;
 import de.mcterranova.guilds.database.dao.GuildDao;
 import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.GuildMember;
@@ -10,11 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class GuildManager {
-    private final Guilds plugin;
     private final GuildDao guildDao;
 
-    public GuildManager(Guilds plugin, GuildDao guildDao) {
-        this.plugin = plugin;
+    public GuildManager(GuildDao guildDao) {
         this.guildDao = guildDao;
     }
 
@@ -34,7 +31,23 @@ public class GuildManager {
         guildDao.updateGuildPoints(guildName, points);
     }
 
-    public void updatePlayerPoints(String guildName, GuildMember member){guildDao.updatePlayerContribution(guildName, member);}
+    public void updatePlayerPoints(String guildName, GuildMember member) {
+        guildDao.updatePlayerContribution(guildName, member);
+    }
+
+    public void addPointsToPlayerContribution(String guildName, UUID playerId, int pointsToAdd) {
+        // Retrieve the guild, find the member, update contributed points
+        Guild guild = getGuildByName(guildName);
+        if (guild == null) return;
+
+        GuildMember member = guild.getMembers().stream()
+                .filter(m -> m.getUuid().equals(playerId))
+                .findFirst().orElse(null);
+        if (member == null) return;
+
+        member.setContributedPoints(member.getContributedPoints() + pointsToAdd);
+        guildDao.updatePlayerContribution(guildName, member);
+    }
 
     public void resetAllGuildPoints() {
         guildDao.resetAllGuildPoints();

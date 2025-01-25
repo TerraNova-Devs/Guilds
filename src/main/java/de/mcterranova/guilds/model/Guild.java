@@ -1,8 +1,6 @@
 package de.mcterranova.guilds.model;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 
 import java.util.List;
 import java.util.UUID;

@@ -10,80 +10,87 @@ economy:
   monthly_winner_money: 1000.0
 
 tasks:
+  # Here, each guild type (FARMER, MINER, etc.)
+  # has two subsections: DAILY and MONTHLY.
   FARMER:
-    - description: "Ernte 20 Weizen"
-      event: HARVEST
-      material_or_mob: WHEAT
-      required_amount: 20
-      points_reward: 5
-      money_reward: 5.0
-    - description: "Ernte 15 Kartoffeln"
-      event: HARVEST
-      material_or_mob: POTATOES
-      required_amount: 15
-      points_reward: 5
-      money_reward: 4.0
-    - description: "Crafte 10 Brote"
-      event: CRAFT_ITEM
-      material_or_mob: BREAD
-      required_amount: 10
-      points_reward: 5
-      money_reward: 10.0
+    DAILY:
+      - description: "Ernte 20 Weizen"
+        event: HARVEST
+        material_or_mob: WHEAT
+        required_amount: 20
+        points_reward: 5
+        money_reward: 5.0
+
+      - description: "Ernte 15 Kartoffeln"
+        event: HARVEST
+        material_or_mob: POTATOES
+        required_amount: 15
+        points_reward: 5
+        money_reward: 4.0
+
+      - description: "Crafte 10 Brote"
+        event: CRAFT_ITEM
+        material_or_mob: BREAD
+        required_amount: 10
+        points_reward: 5
+        money_reward: 10.0
+
+    MONTHLY:
+      - description: "Ernte 10000 Weizen (Gildenweit)"
+        event: HARVEST
+        material_or_mob: WHEAT
+        required_amount: 10
+        points_reward: 50
+        money_reward: 75.0
+
+      - description: "Ernte 5000 Karotten (Gildenweit)"
+        event: HARVEST
+        material_or_mob: CARROTS
+        required_amount: 10
+        points_reward: 40
+        money_reward: 30.0
+
+      - description: "Ernte 8000 Kartoffeln (Gildenweit)"
+        event: HARVEST
+        material_or_mob: POTATOES
+        required_amount: 10
+        points_reward: 45
+        money_reward: 50.0
 
   MINER:
-    - description: "Baue 10 Eisenerz ab"
-      event: BLOCK_BREAK
-      material_or_mob: IRON_ORE
-      required_amount: 10
-      points_reward: 5
-      money_reward: 5.0
-    - description: "Schmelze 5 Eisenbarren"
-      event: SMELT
-      material_or_mob: IRON_INGOT
-      required_amount: 5
-      points_reward: 5
-      money_reward: 5.0
-    - description: "Baue 10 Golderz ab"
-      event: BLOCK_BREAK
-      material_or_mob: GOLD_ORE
-      required_amount: 10
-      points_reward: 5
-      money_reward: 5.0
+    DAILY:
+      - description: "Baue 10 Eisenerz ab"
+        event: BLOCK_BREAK
+        material_or_mob: IRON_ORE
+        required_amount: 10
+        points_reward: 5
+        money_reward: 5.0
 
-monthly_task_pools:
-  FARMER:
-    - description: "Ernte 10000 Weizen (Gildenweit)"
-      event: HARVEST
-      material_or_mob: "WHEAT"
-      required_amount: 10000
-      points_reward: 50
-      money_reward: 75.0
+      - description: "Schmelze 5 Eisenbarren"
+        event: SMELT
+        material_or_mob: IRON_INGOT
+        required_amount: 5
+        points_reward: 5
+        money_reward: 5.0
 
-    - description: "Ernte 5000 Karotten (Gildenweit)"
-      event: HARVEST
-      material_or_mob: "CARROTS"
-      required_amount: 5000
-      points_reward: 40
-      money_reward: 30.0
+      - description: "Baue 10 Golderz ab"
+        event: BLOCK_BREAK
+        material_or_mob: GOLD_ORE
+        required_amount: 10
+        points_reward: 5
+        money_reward: 5.0
 
-    - description: "Ernte 8000 Kartoffeln (Gildenweit)"
-      event: HARVEST
-      material_or_mob: "POTATOES"
-      required_amount: 8000
-      points_reward: 45
-      money_reward: 50.0
+    MONTHLY:
+      - description: "Baue 5000 Steine (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: STONE
+        required_amount: 5000
+        points_reward: 40
+        money_reward: 50.0
 
-  MINER:
-    - description: "Baue 5000 Steine (Gildenweit)"
-      event: BLOCK_BREAK
-      material_or_mob: "STONE"
-      required_amount: 5000
-      points_reward: 40
-      money_reward: 50.0
-
-    - description: "Finde 300 Diamanten (Gildenweit)"
-      event: BLOCK_BREAK
-      material_or_mob: "DIAMOND_ORE"
-      required_amount: 300
-      points_reward: 100
-      money_reward: 100.0
+      - description: "Finde 300 Diamanten (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: DIAMOND_ORE
+        required_amount: 300
+        points_reward: 100
+        money_reward: 100.0

@@ -3,10 +3,11 @@ package de.mcterranova.guilds.listeners;
 import de.mcterranova.guilds.Guilds;
 import de.mcterranova.guilds.gui.JoinGui;
 import de.mcterranova.guilds.gui.TasksGui;
-import de.mcterranova.guilds.model.DailyTask;
 import de.mcterranova.guilds.model.Guild;
-import de.mcterranova.guilds.model.MonthlyTask;
-import de.mcterranova.guilds.service.*;
+import de.mcterranova.guilds.model.GuildTask;
+import de.mcterranova.guilds.service.GuildManager;
+import de.mcterranova.guilds.service.NPCManager;
+import de.mcterranova.guilds.service.TaskManager;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,14 +19,12 @@ public class NPCClickListener implements Listener {
 
     private final GuildManager guildManager;
     private final TaskManager taskManager;
-    private final MonthlyTaskManager monthlyTaskManager;
     private final NPCManager npcManager;
     private final Guilds plugin;
 
-    public NPCClickListener(Guilds plugin, GuildManager guildManager, TaskManager taskManager, MonthlyTaskManager monthlyTaskManager, NPCManager npcManager) {
+    public NPCClickListener(Guilds plugin, GuildManager guildManager, TaskManager taskManager, NPCManager npcManager) {
         this.guildManager = guildManager;
         this.taskManager = taskManager;
-        this.monthlyTaskManager = monthlyTaskManager;
         this.npcManager = npcManager;
         this.plugin = plugin;
     }
@@ -43,12 +42,20 @@ public class NPCClickListener implements Listener {
 
         Guild playerGuild = guildManager.getGuildByPlayer(player.getUniqueId());
         if (playerGuild == null) {
+            // Player is not in any guild => show JoinGui for the clicked guild
             new JoinGui(player, guild, guildManager).open();
         } else {
+            // Player is in a guild
             if (playerGuild.getName().equalsIgnoreCase(guildName)) {
-                List<DailyTask> tasks = taskManager.getDailyTasksForGuild(guild.getName());
-                MonthlyTask monthlyTask = monthlyTaskManager.getMonthlyTask(guild);
-                new TasksGui(plugin, player, guild, tasks, monthlyTask).open();
+                // The NPC's guild is the player's guild => open tasks GUI
+
+                List<GuildTask> dailyTasks = taskManager.loadTasksForGuild(guild.getName(), "DAILY");
+                List<GuildTask> monthlyTasks = taskManager.loadTasksForGuild(guild.getName(), "MONTHLY");
+
+                // If you only ever have 1 monthly task, you might do:
+                // GuildTask monthlyTask = monthlyTasks.isEmpty() ? null : monthlyTasks.get(0);
+
+                new TasksGui(plugin, player, guild, dailyTasks, monthlyTasks).open();
             } else {
                 player.sendMessage("§cDu bist bereits in einer anderen Gilde und kannst nicht beitreten.");
             }

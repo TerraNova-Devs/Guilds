@@ -1,11 +1,9 @@
 package de.mcterranova.guilds.database.dao;
 
-import de.mcterranova.guilds.model.DailyTask;
 import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.GuildMember;
 import de.mcterranova.guilds.model.GuildType;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
