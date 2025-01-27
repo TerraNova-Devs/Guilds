@@ -1,12 +1,9 @@
 package de.mcterranova.guilds.listeners;
 
 import de.mcterranova.guilds.Guilds;
-import de.mcterranova.guilds.model.MonthlyTask;
 import de.mcterranova.guilds.model.TaskEventType;
 import de.mcterranova.guilds.service.GuildManager;
-import de.mcterranova.guilds.service.MonthlyTaskManager;
 import de.mcterranova.guilds.service.TaskManager;
-
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
@@ -29,13 +26,11 @@ public class PlayerProgressListener implements Listener {
     private final Guilds plugin;
     private final GuildManager guildManager;
     private final TaskManager taskManager;
-    private final MonthlyTaskManager monthlyTaskManager;
 
-    public PlayerProgressListener(Guilds plugin, GuildManager guildManager, TaskManager taskManager, MonthlyTaskManager monthlyTaskManager) {
+    public PlayerProgressListener(Guilds plugin, GuildManager guildManager, TaskManager taskManager) {
         this.plugin = plugin;
         this.guildManager = guildManager;
         this.taskManager = taskManager;
-        this.monthlyTaskManager = monthlyTaskManager;
     }
 
     // ------------------------------------------------------------------------
@@ -47,34 +42,27 @@ public class PlayerProgressListener implements Listener {
         Block block = event.getBlock();
         Material mat = block.getType();
 
-        if (isCrop(mat)) {
-            if (!isFullyGrown(block)) {
-                return;
-            }
-            taskManager.handleEvent(TaskEventType.HARVEST, player, mat.name(), 1);
-            monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.HARVEST, mat.name(), 1, player.getUniqueId());
+        // If it's a crop, only count if fully grown
+        if (isCrop(mat) && !isFullyGrown(block)) {
+            return;
         }
 
+        // Single unified call, handle both daily & monthly tasks
         taskManager.handleEvent(TaskEventType.BLOCK_BREAK, player, mat.name(), 1);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.BLOCK_BREAK, mat.name(), 1, player.getUniqueId());
 
-    }
-
-    // Helper: which materials are farmland crops
-    private boolean isCrop(Material mat) {
-        switch (mat) {
-            case WHEAT:
-            case CARROTS:
-            case POTATOES:
-            case BEETROOTS:
-            case NETHER_WART:
-                return true;
-            default:
-                return false;
+        // If you want to treat HARVEST differently, you can do:
+        if (isCrop(mat)) {
+            taskManager.handleEvent(TaskEventType.HARVEST, player, mat.name(), 1);
         }
     }
 
-    // Helper: check if an ageable block is at max age
+    private boolean isCrop(Material mat) {
+        return switch (mat) {
+            case WHEAT, CARROTS, POTATOES, BEETROOTS, NETHER_WART -> true;
+            default -> false;
+        };
+    }
+
     private boolean isFullyGrown(Block block) {
         BlockData data = block.getBlockData();
         if (data instanceof Ageable ageable) {
@@ -91,41 +79,28 @@ public class PlayerProgressListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
         Material mat = event.getRecipe().getResult().getType();
-
-        // Non-shift craft => usually 1 craft operation
         int amountCrafted = event.getRecipe().getResult().getAmount();
-
-        // If SHIFT-click, compute how many items are actually crafted
         if (event.isShiftClick()) {
             amountCrafted = computeShiftClickAmount(event);
         }
-
         taskManager.handleEvent(TaskEventType.CRAFT_ITEM, player, mat.name(), amountCrafted);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.CRAFT_ITEM, mat.name(), amountCrafted, player.getUniqueId());
     }
 
-    /**
-     * Attempts to compute how many items are crafted when shift-clicking.
-     * For simple 1:1 recipes, this is usually good enough.
-     * For more complex shaped recipes (multiple items per slot),
-     * we might parse the ShapedRecipe or ShapelessRecipe more precisely.
-     */
     private int computeShiftClickAmount(CraftItemEvent event) {
         int perCraft = event.getRecipe().getResult().getAmount();
         ItemStack[] matrix = event.getInventory().getMatrix().clone();
-
         int maxCrafts = Integer.MAX_VALUE;
 
         for (ItemStack slot : matrix) {
             if (slot == null || slot.getType().isAir()) continue;
             int slotCount = slot.getAmount();
+            // You might need something more advanced if your recipes vary
             int usesPerCraft = 1;
             int craftsFromSlot = slotCount / usesPerCraft;
             if (craftsFromSlot < maxCrafts) {
                 maxCrafts = craftsFromSlot;
             }
         }
-
         int totalItems = maxCrafts * perCraft;
         return (totalItems > 0) ? totalItems : perCraft;
     }
@@ -133,10 +108,6 @@ public class PlayerProgressListener implements Listener {
     // ------------------------------------------------------------------------
     // 3) FURNACE EXTRACTION => SMELT
     // ------------------------------------------------------------------------
-    /**
-     * This event fires when a player takes items out of a furnace's output slot,
-     * thus crediting the player who actually collects the smelted items.
-     */
     @EventHandler
     public void onFurnaceExtract(FurnaceExtractEvent event) {
         Player player = event.getPlayer();
@@ -144,7 +115,6 @@ public class PlayerProgressListener implements Listener {
         int amount = event.getItemAmount();
 
         taskManager.handleEvent(TaskEventType.SMELT, player, mat.name(), amount);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.SMELT, mat.name(), amount, player.getUniqueId());
     }
 
     // ------------------------------------------------------------------------
@@ -153,32 +123,17 @@ public class PlayerProgressListener implements Listener {
     @EventHandler
     public void onPlayerFish(PlayerFishEvent event) {
         switch (event.getState()) {
-            case CAUGHT_FISH:
-            case CAUGHT_ENTITY: {
+            case CAUGHT_FISH, CAUGHT_ENTITY -> {
                 Player player = event.getPlayer();
-
                 Entity caught = event.getCaught();
-                if (caught == null) {
-                    return;
-                }
-
                 if (caught instanceof Item itemEntity) {
                     ItemStack caughtStack = itemEntity.getItemStack();
                     Material caughtMat = caughtStack.getType();
-
-                    // Differentiate between cod, salmon, tropical fish, pufferfish, or even random junk
-                    // This way your config could specify event=FISH, material=SALMON, etc.
-                    // The amount is caughtStack.getAmount(), typically 1
                     int amount = caughtStack.getAmount();
-
                     taskManager.handleEvent(TaskEventType.FISH, player, caughtMat.name(), amount);
-                    monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.FISH, caughtMat.name(), amount, player.getUniqueId());
                 }
-                break;
             }
-            default:
-                // ignore other states like FISHING, BITE, etc.
-                break;
+            default -> { }
         }
     }
 
@@ -192,6 +147,5 @@ public class PlayerProgressListener implements Listener {
         EntityType type = event.getEntityType();
 
         taskManager.handleEvent(TaskEventType.ENTITY_KILL, player, type.name(), 1);
-        monthlyTaskManager.handleMonthlyEvent(guildManager.getGuildByPlayer(player.getUniqueId()), TaskEventType.ENTITY_KILL, type.name(), 1, player.getUniqueId());
     }
 }

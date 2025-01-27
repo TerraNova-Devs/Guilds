@@ -22,7 +22,6 @@ public class NPCManager {
     public void init() {
         plugin.getLogger().info("[NPCManager] Scanning for existing NPCs...");
 
-        // Map existing NPCs from Citizens that have "guildName" metadata
         for (NPC npc : CitizensAPI.getNPCRegistry()) {
             plugin.getLogger().info(" - Found NPC: ID=" + npc.getId() + ", name=" + npc.getName());
             if (npc.data().get("guildName") != null) {
@@ -32,7 +31,6 @@ public class NPCManager {
             }
         }
 
-        // For guilds that don't have an NPC, spawn them now
         for (Guild g : guildManager.getAllGuilds()) {
             spawnNPCIfNotExists(g);
         }
@@ -65,7 +63,6 @@ public class NPCManager {
             npc.spawn(guild.getHq());
         }
 
-        // Store in local map
         guildNameToNPCId.put(lower, npc.getId());
         plugin.getLogger().info("Spawned a new NPC for guild: " + guild.getName() + ", ID=" + npc.getId());
     }

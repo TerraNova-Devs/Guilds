@@ -6,8 +6,7 @@ import de.mcterranova.guilds.config.DatabaseConfig;
 import de.mcterranova.guilds.config.PluginConfig;
 import de.mcterranova.guilds.database.ConnectionPool;
 import de.mcterranova.guilds.database.repository.GuildRepository;
-import de.mcterranova.guilds.database.repository.MonthlyTaskRepository;
-import de.mcterranova.guilds.database.repository.TaskRepository;
+import de.mcterranova.guilds.database.repository.GuildTaskRepository;
 import de.mcterranova.guilds.listeners.NPCClickListener;
 import de.mcterranova.guilds.listeners.PlayerProgressListener;
 import de.mcterranova.guilds.service.*;
@@ -27,14 +26,12 @@ public class Guilds extends JavaPlugin {
     private ConnectionPool connectionPool;
 
     private GuildRepository guildRepository;
-    private TaskRepository taskRepository;
+    private GuildTaskRepository guildTaskRepository;
 
     private GuildManager guildManager;
     private TaskManager taskManager;
-    private MonthlyTaskManager monthlyTaskManager;
     private RewardManager rewardManager;
     private NPCManager npcManager;
-    private MonthlyTaskRepository monthlyTaskRepository;
 
     @Override
     public void onEnable() {
@@ -47,17 +44,15 @@ public class Guilds extends JavaPlugin {
         runDatabaseSetup();
 
         this.guildRepository = new GuildRepository(connectionPool);
-        this.taskRepository = new TaskRepository(connectionPool);
-        this.monthlyTaskRepository = new MonthlyTaskRepository(connectionPool.getDataSource());
+        this.guildTaskRepository = new GuildTaskRepository(connectionPool.getDataSource());
 
-        this.guildManager = new GuildManager(this, guildRepository);
-        this.taskManager = new TaskManager(this, guildManager, taskRepository);
-        this.monthlyTaskManager = new MonthlyTaskManager(this, monthlyTaskRepository, guildManager);
-        this.rewardManager = new RewardManager(this, guildManager, taskRepository);
+        this.guildManager = new GuildManager(guildRepository);
+        this.taskManager = new TaskManager(this, guildManager, guildTaskRepository);
+        this.rewardManager = new RewardManager(this, guildManager, guildTaskRepository);
         this.npcManager = new NPCManager(this, guildManager);
 
-        getServer().getPluginManager().registerEvents(new PlayerProgressListener(this, guildManager, taskManager, monthlyTaskManager), this);
-        getServer().getPluginManager().registerEvents(new NPCClickListener(this, guildManager, taskManager, monthlyTaskManager, npcManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerProgressListener(this, guildManager, taskManager), this);
+        getServer().getPluginManager().registerEvents(new NPCClickListener(this, guildManager, taskManager, npcManager), this);
         getServer().getPluginManager().registerEvents(new RoseGUIListener(), this);
 
         getCommand("guild").setExecutor(new GuildCommand(this, guildManager, taskManager));
@@ -68,7 +63,6 @@ public class Guilds extends JavaPlugin {
         }, 20L);
 
         taskManager.onStartup();
-        monthlyTaskManager.onStartup();
 
         getLogger().info("GuildPlugin wurde aktiviert.");
     }
@@ -133,10 +127,6 @@ public class Guilds extends JavaPlugin {
 
     public NPCManager getNpcManager() {
         return npcManager;
-    }
-
-    public MonthlyTaskManager getMonthlyTaskManager() {
-        return monthlyTaskManager;
     }
 
 }

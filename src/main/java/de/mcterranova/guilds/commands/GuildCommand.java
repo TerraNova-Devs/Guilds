@@ -1,14 +1,15 @@
 package de.mcterranova.guilds.commands;
 
 import de.mcterranova.guilds.Guilds;
-import de.mcterranova.guilds.model.DailyTask;
 import de.mcterranova.guilds.model.Guild;
+import de.mcterranova.guilds.model.GuildTask;
 import de.mcterranova.guilds.service.GuildManager;
 import de.mcterranova.guilds.service.TaskManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
 import java.util.List;
 
 public class GuildCommand implements CommandExecutor {
@@ -35,7 +36,7 @@ public class GuildCommand implements CommandExecutor {
                 player.sendMessage("Du bist in keiner Gilde.");
             } else {
                 player.sendMessage("§eDeine Gilde: §b" + guild.getName());
-                player.sendMessage("§ePunkte: §b" + guild.getPoints());
+                player.sendMessage("§eGildenpunkte: §b" + guild.getPoints());
                 player.sendMessage("§eBefehle: /guild tasks");
             }
             return true;
@@ -47,10 +48,13 @@ public class GuildCommand implements CommandExecutor {
                 return true;
             }
 
-            List<DailyTask> tasks = taskManager.getDailyTasksForGuild(guild.getName());
+            // Load today's daily tasks for that guild:
+            List<GuildTask> dailyTasks = taskManager.loadTasksForGuild(guild.getName(), "DAILY");
             player.sendMessage("§eTägliche Aufgaben für " + guild.getName() + ":");
-            for (DailyTask dt : tasks) {
-                player.sendMessage(" - " + dt.getDescription() + " (" + dt.getProgress(player.getUniqueId()) + "/" + dt.getRequiredAmount() + ")");
+            for (GuildTask task : dailyTasks) {
+                int progress = taskManager.getPlayerProgress(task.getTaskId(), player.getUniqueId());
+                // Or if you prefer a ratio: progress + "/" + task.getRequiredAmount()
+                player.sendMessage(" - " + task.getDescription() + " (" + progress + "/" + task.getRequiredAmount() + ")");
             }
             return true;
         }
