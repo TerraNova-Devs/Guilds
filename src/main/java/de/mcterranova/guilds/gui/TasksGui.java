@@ -67,11 +67,18 @@ public class TasksGui extends RoseGUI {
             GuildTask task = dailyTasks.get(i);
 
             int progress = taskManager.getPlayerProgress(task.getTaskId(), playerId);
+            int personalProgress = progress;  // For daily tasks, "personal" = total anyway
             boolean completed = taskManager.isTaskCompleted(task.getTaskId(), playerId);
             boolean claimed = taskManager.isTaskClaimed(task.getTaskId(), playerId);
 
-            RoseItem item = buildTaskItem(task, progress, completed, claimed);
-            // place them in row 3, columns left (just an example)
+            RoseItem item = buildTaskItem(
+                    task,
+                    progress,
+                    personalProgress,
+                    completed,
+                    claimed,
+                    false
+            );
             addItem(19 + i, item);
         }
 
@@ -79,25 +86,45 @@ public class TasksGui extends RoseGUI {
         for (int i = 0; i < monthlyTasks.size(); i++) {
             GuildTask task = monthlyTasks.get(i);
 
-            // For monthly tasks, you might show both guild progress + personal
-            // But in the simplest approach, you only track per-player completion
-            int progress = taskManager.getGuildProgress(task.getTaskId(), guild.getName());
+            int guildProgress = taskManager.getGuildProgress(task.getTaskId(), guild.getName());
+            // For monthly tasks, we also want to show the player's personal progress:
+            int personalProgress = taskManager.getPlayerProgress(task.getTaskId(), playerId);
+
             boolean completed = taskManager.isTaskCompleted(task.getTaskId(), guild.getName());
             boolean claimed = taskManager.isTaskClaimed(task.getTaskId(), playerId);
 
-            RoseItem item = buildTaskItem(task, progress, completed, claimed);
-            // place them e.g. in row 3, columns right
+            RoseItem item = buildTaskItem(
+                    task,
+                    guildProgress,
+                    personalProgress,
+                    completed,
+                    claimed,
+                    true
+            );
             addItem(23 + i, item);
         }
     }
 
-    private RoseItem buildTaskItem(GuildTask task, int progress, boolean completed, boolean claimed) {
+    private RoseItem buildTaskItem(GuildTask task,
+                                   int totalProgress,
+                                   int personalProgress,
+                                   boolean completed,
+                                   boolean claimed,
+                                   boolean isMonthly) {
+
         String displayName = "§a" + task.getDescription();
         List<Component> lore = new ArrayList<>();
 
-        // Show e.g. "progress / required"
-        lore.add(Component.text("§7Fortschritt: " + progress + "/" + task.getRequiredAmount()));
-        lore.add(Component.text("§7Belohnung: " + task.getPointsReward() + " Pkt & " + task.getMoneyReward() + " Silber"));
+        String bar = createProgressBar(totalProgress, task.getRequiredAmount(), 10);
+        String progressLine = "§7Fortschritt: " + bar + " §e(" + totalProgress + "/" + task.getRequiredAmount() + ")";
+        lore.add(Component.text(progressLine));
+
+        if (isMonthly) {
+            lore.add(Component.text("§7Dein Beitrag: §e" + personalProgress));
+        }
+
+        String rewardLine = "§7Belohnung: §b" + task.getPointsReward() + " §7Gildenpunkte & §b" + task.getMoneyReward() + " §7Silber";
+        lore.add(Component.text(rewardLine));
 
         if (!completed) {
             lore.add(Component.text("§cNoch nicht abgeschlossen."));
@@ -124,13 +151,81 @@ public class TasksGui extends RoseGUI {
                         .isEnchanted(true)
                         .build()
                         .onClick((InventoryClickEvent e) -> {
-                            // Claim it
                             Player p = (Player) e.getWhoClicked();
                             taskManager.claimReward(task, p);
-                            // Re-open the GUI to refresh items
                             new TasksGui(plugin, p, guild, dailyTasks, monthlyTasks).open();
                         });
             }
         }
     }
+
+    /**
+     * Creates a progress bar using partial block characters.
+     *
+     * Each bar segment can contain:
+     * - A full filled block.
+     * - A partial filled block followed by a partial empty block.
+     *
+     * This ensures that each segment occupies consistent space in the GUI.
+     *
+     * @param current the current progress (e.g., 55)
+     * @param max     the required total (e.g., 100)
+     * @param length  the total number of segments in the bar (e.g., 20)
+     * @return a String representing the progress bar, e.g., "§a█████▌▏████▉▎████"
+     */
+    private String createProgressBar(int current, int max, int length) {
+        if (max <= 0) {
+            return "§a" + "█".repeat(length);
+        }
+
+        current = Math.min(current, max);
+
+        double progressFraction = (double) current / max;
+        double totalPartials = length * 8;
+        double progressPartial = progressFraction * totalPartials;
+
+        int fullSegments = (int) (progressPartial / 8);
+        int partialValue = (int) (progressPartial % 8);
+
+        StringBuilder bar = new StringBuilder("§a");
+
+        for (int i = 0; i < fullSegments; i++) {
+            bar.append("█");
+        }
+
+        if (partialValue > 0 && fullSegments < length) {
+            bar.append(getPartialBlock(partialValue));
+            bar.append("§7");
+            bar.append(getPartialBlock(8 - partialValue + 1));
+        }
+
+        int filledLength = fullSegments + (partialValue > 0 ? 1 : 0);
+        int remaining = length - filledLength;
+        bar.append("§7");
+        for (int i = 0; i < remaining; i++) {
+            bar.append("█");
+        }
+
+        return bar.toString();
+    }
+
+    /**
+     * Returns a partial block character based on the fractional value.
+     *
+     * @param partialValue an integer from 1 to 7 representing the fraction (1/8 to 7/8)
+     * @return a String containing the partial block character
+     */
+    private String getPartialBlock(int partialValue) {
+        switch (partialValue) {
+            case 1: return "▏"; // 1/8
+            case 2: return "▎"; // 2/8
+            case 3: return "▍"; // 3/8
+            case 4: return "▌"; // 4/8
+            case 5: return "▋"; // 5/8
+            case 6: return "▊"; // 6/8
+            case 7: return "▉"; // 7/8
+            default: return "";   // No partial block
+        }
+    }
+
 }

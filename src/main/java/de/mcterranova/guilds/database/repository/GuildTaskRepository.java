@@ -122,18 +122,40 @@ public class GuildTaskRepository implements GuildTaskDao {
 
     @Override
     public void deleteTasksByDateAndPeriodicity(LocalDate date, String periodicity) {
-        String sql = "DELETE FROM guild_tasks WHERE assigned_date=? AND periodicity=?";
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        final String dailySql =
+                "DELETE FROM guild_tasks "
+                        + "WHERE periodicity = ? "
+                        + "  AND assigned_date < ?";
 
-            ps.setDate(1, Date.valueOf(date));
-            ps.setString(2, periodicity);
+        final String monthlySql =
+                "DELETE FROM guild_tasks "
+                        + "WHERE periodicity = ? "
+                        + "  AND (YEAR(assigned_date)  < YEAR(?) "
+                        + "       OR MONTH(assigned_date) < MONTH(?))";
+
+        String sql;
+
+        if ("DAILY".equalsIgnoreCase(periodicity)) {
+            sql = dailySql;
+        } else if ("MONTHLY".equalsIgnoreCase(periodicity)) {
+            sql = monthlySql;
+        } else {
+            return;
+        }
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, periodicity);
+            ps.setDate(2, Date.valueOf(date));
+
+            if ("MONTHLY".equalsIgnoreCase(periodicity)) {
+                ps.setDate(3, Date.valueOf(date));
+            }
             ps.executeUpdate();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     // ------------------
     // Guild progress

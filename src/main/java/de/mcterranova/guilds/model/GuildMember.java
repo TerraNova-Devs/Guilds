@@ -1,14 +1,18 @@
 package de.mcterranova.guilds.model;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 public class GuildMember {
     private final UUID uuid;
     private int contributed_points;
+    private LocalDate joined_at;
 
-    public GuildMember(UUID uuid, int contributed_points) {
+    public GuildMember(UUID uuid, int contributed_points, LocalDate joined_at) {
         this.uuid = uuid;
         this.contributed_points = contributed_points;
+        this.joined_at = joined_at;
     }
 
     public UUID getUuid() {
@@ -29,5 +33,13 @@ public class GuildMember {
 
     public void removePoints(int points) {
         contributed_points -= points;
+    }
+
+    public LocalDate getJoinedAt() {
+        return joined_at;
+    }
+
+    public void setJoinedAt(LocalDate joined_at) {
+        this.joined_at = joined_at;
     }
 }

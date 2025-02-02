@@ -6,6 +6,7 @@ import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.GuildTask;
 import de.mcterranova.guilds.model.TaskEventType;
 import de.mcterranova.guilds.model.TaskPeriodicity;
+import de.mcterranova.guilds.util.TimeUtil;
 import io.th0rgal.oraxen.api.OraxenItems;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -44,10 +45,6 @@ public class TaskManager {
     //             DAILY RESET LOGIC
     // ----------------------------------------------------------------
 
-    /**
-     * Checks if the current day differs from the last daily reset
-     * (stored in "task_resets" as reset_type='DAILY').
-     */
     public void checkIfNewDay() {
         Instant lastDailyReset = taskDao.getLastReset("DAILY");
         LocalDate today = LocalDate.now();
@@ -67,9 +64,6 @@ public class TaskManager {
         }
     }
 
-    /**
-     * Actually removes the old daily tasks, then assigns new ones for each guild.
-     */
     public void dailyResetCore() {
         // Remove any daily tasks from *today* or from yesterday—your choice:
         // This example deletes tasks assigned *today*, so we can reassign fresh tasks:
@@ -93,11 +87,8 @@ public class TaskManager {
         plugin.getLogger().info("Assigned new daily tasks for all guilds.");
     }
 
-    /**
-     * Schedule a daily reset *roughly* at midnight.
-     */
     public void scheduleDailyReset() {
-        long ticksUntilMidnight = getTicksUntilMidnight();
+        long ticksUntilMidnight = TimeUtil.getTicksUntilMidnight();
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             dailyResetCore();
             taskDao.setLastReset("DAILY", Instant.now());
@@ -110,10 +101,6 @@ public class TaskManager {
     //             MONTHLY RESET LOGIC
     // ----------------------------------------------------------------
 
-    /**
-     * Checks if the current month differs from the last monthly reset
-     * (reset_type='MONTHLY').
-     */
     public void checkIfNewMonth() {
         Instant lastMonthlyReset = taskDao.getLastReset("MONTHLY");
         LocalDate now = LocalDate.now();
@@ -135,9 +122,6 @@ public class TaskManager {
         }
     }
 
-    /**
-     * Actually removes old monthly tasks, then assigns new ones for each guild.
-     */
     public void monthlyResetCore() {
         // Delete tasks with periodicity=MONTHLY from *today*
         taskDao.deleteTasksByDateAndPeriodicity(LocalDate.now(), "MONTHLY");
@@ -165,7 +149,7 @@ public class TaskManager {
      * Schedules the monthly reset to occur ~on the 1st of next month, for instance.
      */
     public void scheduleMonthlyReset() {
-        long ticksUntilNextMonth = getTicksUntilNextMonth();
+        long ticksUntilNextMonth = TimeUtil.getTicksUntilNextMonth();
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             monthlyResetCore();
             taskDao.setLastReset("MONTHLY", Instant.now());
@@ -219,7 +203,7 @@ public class TaskManager {
 
                     if (newProgress >= task.getRequiredAmount()) {
                         taskDao.markTaskCompleted(task.getTaskId(), player.getUniqueId());
-                        player.sendMessage("§aTask completed: " + task.getDescription());
+                        player.sendMessage("§aAufgabe abgeschlossen: " + task.getDescription());
                     }
                 } else if (!taskDao.isTaskCompleted(task.getTaskId(), guild.getName())) {
                     int oldProgress = taskDao.getGuildProgress(task.getTaskId(), guild.getName());
@@ -231,7 +215,7 @@ public class TaskManager {
                     if (newProgress >= task.getRequiredAmount()) {
                         taskDao.markGuildTaskCompleted(task.getTaskId(), guild.getName());
                         guildManager.updateGuildPoints(guild.getName(), guild.getPoints() + task.getPointsReward());
-                        plugin.getServer().broadcastMessage("§aGuild task completed: " + task.getDescription());
+                        plugin.getServer().broadcastMessage("§aGildenaufgabe abgeschlossen: " + task.getDescription());
                     }
 
                 }
@@ -253,27 +237,25 @@ public class TaskManager {
     public void claimReward(GuildTask task, Player player) {
         UUID playerId = player.getUniqueId();
 
-        // 1) Must be completed
         if (Objects.equals(task.getPeriodicity(), TaskPeriodicity.DAILY.name()) && !taskDao.isTaskCompleted(task.getTaskId(), playerId)) {
-            player.sendMessage("§cYou haven't completed the task yet!");
+            player.sendMessage("§cDu hast diese Aufgabe noch nicht beendet!");
             return;
         }
         if(Objects.equals(task.getPeriodicity(), TaskPeriodicity.MONTHLY.name()) && !taskDao.isTaskCompleted(task.getTaskId(), task.getGuildName())) {
-            player.sendMessage("§cYour guild hasn't completed the task yet!");
+            player.sendMessage("§cDeine Gilde hat diese Aufgabe noch nicht beendet!");
             return;
         }
-        // 2) Must not be claimed
         if (taskDao.isTaskClaimed(task.getTaskId(), playerId)) {
-            player.sendMessage("§cYou already claimed this reward!");
+            player.sendMessage("§cDu hast diese Belohnung bereits abgeholt!");
             return;
         }
 
-        // 3) Mark claimed
+        // Mark claimed
         taskDao.markTaskClaimed(task.getTaskId(), playerId);
 
-        // 4) Give item or money, update guild points, etc.
+        // Give item or money, update guild points, etc.
         double money = task.getMoneyReward();
-        player.sendMessage("§aYou received " + money + " money for completing " + task.getDescription());
+        player.sendMessage("§aDu hast " + money + " Silber für die Aufgabe " + task.getDescription() + " erhalten.");
 
         Guild guild = guildManager.getGuildByName(task.getGuildName());
         if (guild != null) {
@@ -289,7 +271,7 @@ public class TaskManager {
             moneyStack.setAmount((int) money);
             var remaining = player.getInventory().addItem(moneyStack);
             if (!remaining.isEmpty()) {
-                player.sendMessage("§cYour inventory is full! The reamining " + money + " dropped.");
+                player.sendMessage("§cDein Inventar ist voll! Die verbleibenden " + money + " Silber wurden auf den Boden gedroppt.");
                 for (ItemStack item : remaining.values()) {
                     Bukkit.getWorld(player.getWorld().getName()).dropItem(player.getLocation(), item);
                 }
@@ -349,26 +331,6 @@ public class TaskManager {
     //             UTILITY: LOADING TASKS FROM CONFIG, ETC.
     // ----------------------------------------------------------------
 
-    /**
-     * Reads tasks from your plugin's config for a given guildType & periodicity.
-     * For instance:
-     *  tasks:
-     *    KNIGHTS:
-     *      DAILY:
-     *        - description: "Kill 10 zombies"
-     *          material_or_mob: "ZOMBIE"
-     *          required_amount: 10
-     *          points_reward: 50
-     *          money_reward: 10.0
-     *          event_type: "ENTITY_KILL"
-     *      MONTHLY:
-     *        - description: "Mine 500 diamonds"
-     *          material_or_mob: "DIAMOND_ORE"
-     *          required_amount: 500
-     *          points_reward: 1000
-     *          money_reward: 200.0
-     *          event_type: "BLOCK_BREAK"
-     */
     private List<GuildTask> loadTaskPoolFromConfig(String guildType, String periodicity) {
         String path = "tasks." + guildType + "." + periodicity;
         if (!plugin.getConfig().contains(path)) {
@@ -408,23 +370,5 @@ public class TaskManager {
         Collections.shuffle(pool, ThreadLocalRandom.current());
         int end = Math.min(count, pool.size());
         return pool.subList(0, end);
-    }
-
-    /**
-     * Example placeholder for how many ticks until midnight.
-     * You can refine this to properly calculate real time left.
-     */
-    private long getTicksUntilMidnight() {
-        // e.g. 20 ticks = 1 second, so 20 * 60 * 60 = 1 hour
-        return 20L * 60L * 60L;
-    }
-
-    /**
-     * Example placeholder for how many ticks until the next month.
-     * You can refine this to properly calculate real time left.
-     */
-    private long getTicksUntilNextMonth() {
-        // e.g. pretend 1 day in ticks
-        return 20L * 60L * 60L * 24L;
     }
 }

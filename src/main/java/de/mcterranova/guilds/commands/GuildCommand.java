@@ -36,7 +36,7 @@ public class GuildCommand implements CommandExecutor {
                 player.sendMessage("Du bist in keiner Gilde.");
             } else {
                 player.sendMessage("§eDeine Gilde: §b" + guild.getName());
-                player.sendMessage("§ePunkte: §b" + guild.getPoints());
+                player.sendMessage("§eGildenpunkte: §b" + guild.getPoints());
                 player.sendMessage("§eBefehle: /guild tasks");
             }
             return true;

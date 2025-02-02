@@ -12,6 +12,7 @@ import org.bukkit.World;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -58,17 +59,31 @@ public class GuildRepository implements GuildDao {
 
     private List<GuildMember> getGuildMembers(String guildName, Connection conn) {
         List<GuildMember> members = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT player_uuid, contributed_points FROM guild_members WHERE guild_name=?")) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT player_uuid, contributed_points, joined_at FROM guild_members WHERE guild_name=?")) {
             ps.setString(1, guildName);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    members.add(new GuildMember(UUID.fromString(rs.getString("player_uuid")), rs.getInt("contributed_points")));
+                    members.add(new GuildMember(UUID.fromString(rs.getString("player_uuid")), rs.getInt("contributed_points"), rs.getDate("joined_at").toLocalDate()));
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return members;
+    }
+
+    private GuildMember getGuildMember(UUID playerId) {
+        try (Connection conn = pool.getDataSource().getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT contributed_points, joined_at FROM guild_members WHERE player_uuid=?")) {
+            ps.setString(1, playerId.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new GuildMember(playerId, rs.getInt("contributed_points"),rs.getDate("joined_at").toLocalDate());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -159,9 +174,10 @@ public class GuildRepository implements GuildDao {
     @Override
     public void addMemberToGuild(String guildName, UUID playerId) {
         try (Connection conn = pool.getDataSource().getConnection();
-             PreparedStatement ps = conn.prepareStatement("INSERT INTO guild_members (guild_name, player_uuid) VALUES (?,?)")) {
+             PreparedStatement ps = conn.prepareStatement("INSERT INTO guild_members (guild_name, player_uuid, joined_at) VALUES (?,?,?)")) {
             ps.setString(1, guildName);
             ps.setString(2, playerId.toString());
+            ps.setDate(3, java.sql.Date.valueOf(LocalDate.now()));
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
