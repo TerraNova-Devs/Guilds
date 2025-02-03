@@ -35,8 +35,10 @@ public class GuildMemberGui extends RoseGUI {
                 .sorted(Comparator.comparingInt(GuildMember::getContributedPoints).reversed())
                 .collect(Collectors.toList());
 
-        // Register pagination slots (e.g., slots 10–43 in a 6-row GUI for members)
-        pagination.registerPageSlotsBetween(10, 43);
+        pagination.registerPageSlotsBetween(10, 16);
+        pagination.registerPageSlotsBetween(19, 25);
+        pagination.registerPageSlotsBetween(28, 34);
+        pagination.registerPageSlotsBetween(37, 43);
 
 
 
@@ -95,20 +97,20 @@ public class GuildMemberGui extends RoseGUI {
         addItem(50, nextPage);
 
         // Fill the other slots in the navigation bar
-        fillNavigationBar();
+        fillBorder();
     }
 
     /**
      * Fills the navigation bar with decorative filler items.
      */
-    private void fillNavigationBar() {
+    private void fillBorder() {
         RoseItem filler = new RoseItem.Builder()
                 .material(Material.BLACK_STAINED_GLASS_PANE)
                 .displayName(Component.text(""))
                 .build();
 
         // Fill slots except for navigation buttons
-        for (int i : new int[]{45, 46, 47, 49, 51, 52, 53}) {
+        for (int i : new int[]{0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45, 46, 47, 49, 51, 52, 53}) {
             addItem(i, filler);
         }
     }
