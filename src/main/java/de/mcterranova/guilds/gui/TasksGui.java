@@ -118,6 +118,20 @@ public class TasksGui extends RoseGUI {
                 });
 
         addItem(16, memberList);
+
+        RoseItem leaderboard = new RoseItem.Builder()
+                .material(Material.TOTEM_OF_UNDYING)
+                .displayName(Component.text("§eGilden-Rangliste"))
+                .addLore(
+                        Component.text("§7Klicke, um die Rangliste aller Gilden zu sehen."),
+                        Component.text("§7Sortiert nach Gildenpunkten.")
+                )
+                .build()
+                .onClick((InventoryClickEvent e) -> {
+                    new GuildLeaderboardGui((Player) e.getWhoClicked(), plugin.getGuildManager()).open();
+                });
+
+        addItem(25, leaderboard);
     }
 
     private RoseItem buildTaskItem(GuildTask task,
