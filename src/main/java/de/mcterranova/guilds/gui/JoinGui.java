@@ -24,7 +24,7 @@ public class JoinGui extends RoseGUI {
     private final GuildManager guildManager;
 
     public JoinGui(Player player, Guild guild, GuildManager guildManager) {
-        super(player, "join_gui", Component.text("Join " + guild.getName()), 1);
+        super(player, "join_gui", Component.text("Join " + guild.getName().substring(0, 1).toUpperCase() + guild.getName().substring(1)), 3);
         this.guild = guild;
         this.guildManager = guildManager;
     }
@@ -33,6 +33,12 @@ public class JoinGui extends RoseGUI {
     public void onOpen(InventoryOpenEvent event) throws SQLException {
         Player viewer = (Player) event.getPlayer();
         UUID playerId = viewer.getUniqueId();
+
+        RoseItem filler = new RoseItem.Builder()
+                .material(Material.BLACK_STAINED_GLASS_PANE)
+                .displayName("")
+                .build();
+        fillGui(filler);
 
         addLeaveSwitchGuildOption(viewer, playerId);
     }
@@ -87,7 +93,7 @@ public class JoinGui extends RoseGUI {
                     }
                 });
 
-        int slot = 4;
+        int slot = 13;
         addItem(slot, switchGuildItem);
     }
 }

@@ -36,7 +36,7 @@ public class TasksGui extends RoseGUI {
 
     public TasksGui(Guilds plugin, Player player, Guild guild,
                     List<GuildTask> dailyTasks, List<GuildTask> monthlyTasks) {
-        super(player, "tasks_gui", Component.text("Gildenaufgaben"), 4);
+        super(player, "tasks_gui", Component.text("Gildenaufgaben " + guild.getName().substring(0, 1).toUpperCase() + guild.getName().substring(1)), 5);
         this.plugin = plugin;
         this.guild = guild;
         this.dailyTasks = dailyTasks;
@@ -186,8 +186,8 @@ public class TasksGui extends RoseGUI {
                     // Refresh the GUI.
                     new TasksGui(plugin, viewer, guild, dailyTasks, monthlyTasks).open();
                 });
-        // Place the new item in an available slot (for example, slot 31)
-        addItem(31, claimRewardsItem);
+
+        addItem(34, claimRewardsItem);
     }
 
     private RoseItem buildTaskItem(GuildTask task,

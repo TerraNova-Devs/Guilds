@@ -49,14 +49,16 @@ public class RewardManager {
      * guild size and uses a log factor to reward bigger rosters.
      */
     public double calculateFairScore(Guild guild) {
-        int totalScore = guild.getPoints();
         int activeMembers = guild.getActiveMembersCount();
-        // Avoid division by zero: if guild has no members, treat as 0 or 1
         if (activeMembers < 1) {
             return 0.0;
         }
-        return (double) totalScore / activeMembers * Math.log(activeMembers + 1);
+        double averageContribution = (double) guild.getPoints() / activeMembers;
+        // Use an exponent less than 0.5 to reduce the penalty on small guilds.
+        double exponent = 0.4;
+        return averageContribution * Math.pow(activeMembers, exponent);
     }
+
 
     /**
      * Award the monthly winner’s guild members a special item or currency.

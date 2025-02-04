@@ -23,7 +23,7 @@ public class GuildMemberGui extends RoseGUI {
     private final RosePagination pagination;
 
     public GuildMemberGui(Player player, Guild guild) {
-        super(player, "guild_member_gui", Component.text("§eGildenmitglieder: " + guild.getName()), 6);
+        super(player, "guild_member_gui", Component.text("§eGildenmitglieder: " + guild.getName().substring(0, 1).toUpperCase() + guild.getName().substring(1)), 6);
         this.guild = guild;
         this.pagination = new RosePagination(this);
     }
@@ -44,19 +44,31 @@ public class GuildMemberGui extends RoseGUI {
 
         // Add members to pagination
         sortedMembers.forEach(member -> {
-            RoseItem memberItem = new RoseItem.Builder()
-                    .material(Material.PLAYER_HEAD)
-                    .displayName(Component.text("§a" + Bukkit.getOfflinePlayer(member.getUuid()).getName()))
-                    .addLore(
-                            Component.text("§7Gildenpunkte: §e" + member.getContributedPoints()),
-                            Component.text("§7Beigetreten: §e" + member.getJoinedAt().toString())
-                    )
-                    .build();
-            SkullMeta skullMeta = (SkullMeta) memberItem.stack.getItemMeta();
-            skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(member.getUuid()));
-            memberItem.stack.setItemMeta(skullMeta);
+            try {
+                RoseItem memberItem = new RoseItem.Builder()
+                        .material(Material.PLAYER_HEAD)
+                        .displayName(Component.text("§a" + Bukkit.getOfflinePlayer(member.getUuid()).getName()))
+                        .addLore(
+                                Component.text("§7Gildenpunkte: §e" + member.getContributedPoints()),
+                                Component.text("§7Beigetreten: §e" + member.getJoinedAt().toString())
+                        )
+                        .build();
+                SkullMeta skullMeta = (SkullMeta) memberItem.stack.getItemMeta();
+                skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(member.getUuid()));
+                memberItem.stack.setItemMeta(skullMeta);
 
-            pagination.addItem(memberItem);
+                pagination.addItem(memberItem);
+            } catch (Exception e) {
+                RoseItem memberItem = new RoseItem.Builder()
+                        .material(Material.PLAYER_HEAD)
+                        .displayName(Component.text("§a" + member.getUuid()))
+                        .addLore(
+                                Component.text("§7Gildenpunkte: §e" + member.getContributedPoints()),
+                                Component.text("§7Beigetreten: §e" + member.getJoinedAt().toString())
+                        )
+                        .build();
+                pagination.addItem(memberItem);
+            }
         });
 
         // Update the GUI with the current page
