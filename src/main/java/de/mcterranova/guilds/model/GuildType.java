@@ -4,5 +4,7 @@ public enum GuildType {
     FARMER,
     MINER,
     WOODCUTTER,
-    BAKER
+    FISHER,
+    HUNTER,
+    GARDENER
 }
