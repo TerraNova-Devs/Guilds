@@ -3,6 +3,7 @@ package de.mcterranova.guilds.common.service;
 import de.mcterranova.guilds.common.Guilds;
 import de.mcterranova.guilds.common.database.dao.GuildTaskDao;
 import de.mcterranova.guilds.common.model.*;
+import de.mcterranova.guilds.common.util.ProgressBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
@@ -55,6 +56,8 @@ public class TaskManager {
             if (task.getEventType() == eventType
                     && task.getMaterialOrMob().equalsIgnoreCase(materialOrMob)) {
 
+                int required = task.getRequiredAmount();
+
                 // If not already completed
                 if (task.getPeriodicity().equalsIgnoreCase(TaskPeriodicity.DAILY.name()) && !taskDao.isTaskCompleted(task.getTaskId(), player.getUniqueId())) {
                     int oldProgress = taskDao.getPlayerProgress(task.getTaskId(), player.getUniqueId());
@@ -62,6 +65,13 @@ public class TaskManager {
 
                     // Update partial progress
                     taskDao.updatePlayerProgress(task.getTaskId(), player.getUniqueId(), amount);
+
+                    // Show an action bar with the new progress
+                    int clampedProgress = Math.min(newProgress, required); // just in case it overshoots
+                    String bar = ProgressBar.createProgressBar(clampedProgress, required);
+                    String msg = "§6 " + task.getDescription() + " " + bar + " §e(" + clampedProgress + "/" + required + ")";
+
+                    player.sendActionBar(Component.text(msg));
 
                     if (newProgress >= task.getRequiredAmount()) {
                         taskDao.markTaskCompleted(task.getTaskId(), player.getUniqueId());
@@ -73,6 +83,12 @@ public class TaskManager {
 
                     // Update partial progress
                     taskDao.updatePlayerProgress(task.getTaskId(), player.getUniqueId(), amount);
+
+                    int clampedProgress = Math.min(newProgress, required); // just in case it overshoots
+                    String bar = ProgressBar.createProgressBar(clampedProgress, required);
+                    String msg = "§6" + task.getDescription() + " " + bar + " §e(" + clampedProgress + "/" + required + ")";
+
+                    player.sendActionBar(Component.text(msg));
 
                     if (newProgress >= task.getRequiredAmount()) {
                         taskDao.markGuildTaskCompleted(task.getTaskId(), guild.getName());
