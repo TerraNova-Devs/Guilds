@@ -1,0 +1,18 @@
+dependencies {
+    implementation(project(":guilds-common")) // we use the shared library
+
+    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
+    // If you want Oraxen for item creation or not:
+    // compileOnly("io.th0rgal:oraxen:1.180.0")
+}
+
+tasks.processResources {
+    filteringCharset = 'UTF-8'
+    filesMatching("plugin.yml") {
+        expand("version": project.version)
+    }
+}
+
+shadowJar {
+    archiveClassifier.set("")
+}

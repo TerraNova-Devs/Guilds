@@ -1,0 +1,509 @@
+database:
+  host: "localhost"
+  port: 3306
+  database: "network"
+  user: "minecraft"
+  password: "minecraft"
+
+economy:
+  daily_task_money_base: 50.0
+  monthly_winner_money: 128.0
+
+tasks:
+  FARMER:
+    DAILY:
+      - description: "Ernte 100 Weizen"
+        event: HARVEST
+        material_or_mob: WHEAT
+        required_amount: 100
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Ernte 100 Kartoffeln"
+        event: HARVEST
+        material_or_mob: POTATOES
+        required_amount: 100
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Ernte 100 Karotten"
+        event: HARVEST
+        material_or_mob: CARROTS
+        required_amount: 100
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Ernte 100 Rüben"
+        event: HARVEST
+        material_or_mob: BEETROOT
+        required_amount: 100
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Ernte 16 Melonen"
+        event: BLOCK_BREAK
+        material_or_mob: MELON
+        required_amount: 16
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Ernte 16 Kürbisse"
+        event: BLOCK_BREAK
+        material_or_mob: PUMPKIN
+        required_amount: 16
+        points_reward: 5
+        money_reward: 7.0
+
+    MONTHLY:
+      - description: "Ernte 10000 Weizen (Gildenweit)"
+        event: HARVEST
+        material_or_mob: WHEAT
+        required_amount: 10000
+        points_reward: 50
+        money_reward: 75.0
+      - description: "Ernte 8000 Kartoffeln (Gildenweit)"
+        event: HARVEST
+        material_or_mob: POTATOES
+        required_amount: 8000
+        points_reward: 50
+        money_reward: 70.0
+      - description: "Ernte 5000 Karotten (Gildenweit)"
+        event: HARVEST
+        material_or_mob: CARROTS
+        required_amount: 5000
+        points_reward: 45
+        money_reward: 65.0
+      - description: "Ernte 7000 Rüben (Gildenweit)"
+        event: HARVEST
+        material_or_mob: BEETROOT
+        required_amount: 7000
+        points_reward: 45
+        money_reward: 65.0
+      - description: "Ernte 9000 Melonen (Gildenweit)"
+        event: HARVEST
+        material_or_mob: MELON
+        required_amount: 9000
+        points_reward: 50
+        money_reward: 80.0
+      - description: "Ernte 6000 Kürbisse (Gildenweit)"
+        event: HARVEST
+        material_or_mob: PUMPKIN
+        required_amount: 6000
+        points_reward: 50
+        money_reward: 75.0
+
+  MINER:
+    DAILY:
+      - description: "Baue 50 Eisenerze ab"
+        event: BLOCK_BREAK
+        material_or_mob: IRON_ORE
+        required_amount: 50
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 50 Kohleerze ab"
+        event: BLOCK_BREAK
+        material_or_mob: COAL_ORE
+        required_amount: 50
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 30 Golderze ab"
+        event: BLOCK_BREAK
+        material_or_mob: GOLD_ORE
+        required_amount: 30
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 12 Diamanterze ab"
+        event: BLOCK_BREAK
+        material_or_mob: DIAMOND_ORE
+        required_amount: 12
+        points_reward: 6
+        money_reward: 7.0
+      - description: "Baue 24 Redstone-Erze ab"
+        event: BLOCK_BREAK
+        material_or_mob: REDSTONE_ORE
+        required_amount: 24
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 10 Lapislazuli-Erze ab"
+        event: BLOCK_BREAK
+        material_or_mob: LAPIS_ORE
+        required_amount: 10
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Schmelze 32 Eisenbarren"
+        event: SMELT
+        material_or_mob: IRON_INGOT
+        required_amount: 32
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Schmelze 32 Goldbarren"
+        event: SMELT
+        material_or_mob: GOLD_INGOT
+        required_amount: 32
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 300 Stein ab"
+        event: BLOCK_BREAK
+        material_or_mob: STONE
+        required_amount: 300
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 60 Kupfererz ab"
+        event: BLOCK_BREAK
+        material_or_mob: COPPER_ORE
+        required_amount: 60
+        points_reward: 5
+        money_reward: 7.0
+
+    MONTHLY:
+      - description: "Baut 5000 Eisenerze ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: IRON_ORE
+        required_amount: 5000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Baut 5000 Kohleerze ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: COAL_ORE
+        required_amount: 5000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Baut 3000 Golderze ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: GOLD_ORE
+        required_amount: 3000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Baut 1500 Diamanten ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: DIAMOND_ORE
+        required_amount: 1500
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Baut 6000 Redstone-Erze ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: REDSTONE_ORE
+        required_amount: 6000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Baut 5000 Lapislazuli-Erze ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: LAPIS_ORE
+        required_amount: 5000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Baut 4000 Kupfererze ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: COPPER_ORE
+        required_amount: 4000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Schmelzt 3000 Eisenbarren (Gildenweit)"
+        event: SMELT
+        material_or_mob: IRON_INGOT
+        required_amount: 3000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Schmelzt 2000 Goldbarren (Gildenweit)"
+        event: SMELT
+        material_or_mob: GOLD_INGOT
+        required_amount: 2000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Baut 25000 Stein ab (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: STONE
+        required_amount: 25000
+        points_reward: 200
+        money_reward: 50.0
+
+  WOODCUTTER:
+    DAILY:
+      - description: "Baue 100 Eichenstämme ab"
+        event: BLOCK_BREAK
+        material_or_mob: OAK_LOG
+        required_amount: 100
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 100 Birkenstämme ab"
+        event: BLOCK_BREAK
+        material_or_mob: BIRCH_LOG
+        required_amount: 100
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 128 Fichtenstämme ab"
+        event: BLOCK_BREAK
+        material_or_mob: SPRUCE_LOG
+        required_amount: 128
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 80 Akazienstämme ab"
+        event: BLOCK_BREAK
+        material_or_mob: ACACIA_LOG
+        required_amount: 80
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 128 Schwarzeichenstämme ab"
+        event: BLOCK_BREAK
+        material_or_mob: DARK_OAK_LOG
+        required_amount: 128
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Baue 64 Mangrovenstämme ab"
+        event: BLOCK_BREAK
+        material_or_mob: MANGROVE_LOG
+        required_amount: 64
+        points_reward: 5
+        money_reward: 7.0
+
+    MONTHLY:
+      - description: "Fällt 6000 Eichenstämme (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: OAK_LOG
+        required_amount: 6000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fälle 6000 Birkenstämme (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: BIRCH_LOG
+        required_amount: 6000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fälle 8000 Fichtenstämme (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: SPRUCE_LOG
+        required_amount: 8000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fälle 3000 Akazienstämme (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: ACACIA_LOG
+        required_amount: 3000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fälle 7000 Schwarzeichenstämme (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: DARK_OAK_LOG
+        required_amount: 7000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fälle 2400 Mangrovenstämme (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: MANGROVE_LOG
+        required_amount: 2400
+        points_reward: 200
+        money_reward: 50.0
+
+  FISHER:
+    DAILY:
+      - description: "Fange 64 Kabeljau"
+        event: FISH
+        material_or_mob: COD
+        required_amount: 32
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Fange 32 Lachse"
+        event: FISH
+        material_or_mob: SALMON
+        required_amount: 32
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Fange 10 Clownfische"
+        event: FISH
+        material_or_mob: TROPICAL_FISH
+        required_amount: 10
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Fange 20 Pufferfische"
+        event: FISH
+        material_or_mob: PUFFERFISH
+        required_amount: 20
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Fange 10 Seerosenblätter"
+        event: BLOCK_BREAK
+        material_or_mob: LILY_PAD
+        required_amount: 10
+        points_reward: 5
+        money_reward: 7.0
+
+    MONTHLY:
+      - description: "Fangt 2000 Kabeljau (Gildenweit)"
+        event: FISH
+        material_or_mob: COD
+        required_amount: 1000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fangt 1500 Lachse (Gildenweit)"
+        event: FISH
+        material_or_mob: SALMON
+        required_amount: 1000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fangt 500 Clownfische (Gildenweit)"
+        event: FISH
+        material_or_mob: TROPICAL_FISH
+        required_amount: 500
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Fangt 1000 Pufferfische (Gildenweit)"
+        event: FISH
+        material_or_mob: PUFFERFISH
+        required_amount: 1000
+        points_reward: 200
+        money_reward: 50.0
+
+  HUNTER:
+    DAILY:
+      - description: "Erlege 32 Skelette"
+        event: ENTITY_KILL
+        material_or_mob: SKELETON
+        required_amount: 32
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Erlege 32 Zombies"
+        event: ENTITY_KILL
+        material_or_mob: ZOMBIE
+        required_amount: 32
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Erlege 24 Creeper"
+        event: ENTITY_KILL
+        material_or_mob: CREEPER
+        required_amount: 24
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Erlege 32 Spinnen"
+        event: ENTITY_KILL
+        material_or_mob: SPIDER
+        required_amount: 32
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Erlege 16 Endermen"
+        event: ENTITY_KILL
+        material_or_mob: ENDERMAN
+        required_amount: 16
+        points_reward: 5
+        money_reward: 7.0
+
+    MONTHLY:
+      - description: "Erlegt 3000 Skelette (Gildenweit)"
+        event: ENTITY_KILL
+        material_or_mob: SKELETON
+        required_amount: 3000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Erlegt 3000 Zombies (Gildenweit)"
+        event: ENTITY_KILL
+        material_or_mob: ZOMBIE
+        required_amount: 3000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Erlegt 1000 Creeper (Gildenweit)"
+        event: ENTITY_KILL
+        material_or_mob: CREEPER
+        required_amount: 1000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Erlegt 3000 Spinnen (Gildenweit)"
+        event: ENTITY_KILL
+        material_or_mob: SPIDER
+        required_amount: 3000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Erlegt 1000 Endermen (Gildenweit)"
+        event: ENTITY_KILL
+        material_or_mob: ENDERMAN
+        required_amount: 1000
+        points_reward: 200
+        money_reward: 50.0
+
+  GARDENER:
+    DAILY:
+      - description: "Ernte 50 Blumen (Dandelion)"
+        event: BLOCK_BREAK
+        material_or_mob: DANDELION
+        required_amount: 50
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Ernte 30 Blumen (Poppy)"
+        event: BLOCK_BREAK
+        material_or_mob: POPPY
+        required_amount: 30
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Sammle 128 Blätter von Eichenbäumen"
+        event: BLOCK_BREAK
+        material_or_mob: OAK_LEAVES
+        required_amount: 128
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Sammle 128 Blätter von Birkenbäumen"
+        event: BLOCK_BREAK
+        material_or_mob: BIRCH_LEAVES
+        required_amount: 128
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Sammle 128 Blätter von Fichtenbäumen"
+        event: BLOCK_BREAK
+        material_or_mob: SPRUCE_LEAVES
+        required_amount: 128
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Sammle 128 Blätter von Schwarzeichenbäumen"
+        event: BLOCK_BREAK
+        material_or_mob: DARK_OAK_LEAVES
+        required_amount: 128
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Entferne 64 Unkraut (Tall Grass)"
+        event: BLOCK_BREAK
+        material_or_mob: TALL_GRASS
+        required_amount: 40
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Entferne 30 Vertrocknete Büsche (Dead Bush)"
+        event: BLOCK_BREAK
+        material_or_mob: DEAD_BUSH
+        required_amount: 30
+        points_reward: 5
+        money_reward: 7.0
+      - description: "Craft 100 Dünger (Bone Meal)"
+        event: CRAFT_ITEM
+        material_or_mob: BONE_MEAL
+        required_amount: 100
+        points_reward: 5
+        money_reward: 7.0
+
+    MONTHLY:
+      - description: "Ernte 1200 Blumen (Dandelion) (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: DANDELION
+        required_amount: 1200
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Ernte 1000 Blumen (Poppy) (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: POPPY
+        required_amount: 1000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Sammle 5000 Eichenblätter (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: LEAVES
+        required_amount: 5000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Beseitige 2000 Unkraut (Tall Grass) (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: TALL_GRASS
+        required_amount: 2000
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Beseitige 1500 Vertrocknete Büsche (Dead Bush) (Gildenweit)"
+        event: BLOCK_BREAK
+        material_or_mob: DEAD_BUSH
+        required_amount: 1500
+        points_reward: 200
+        money_reward: 50.0
+      - description: "Craft 5000 Dünger (Bone Meal) (Gildenweit)"
+        event: CRAFT_ITEM
+        material_or_mob: BONE_MEAL
+        required_amount: 5000
+        points_reward: 200
+        money_reward: 50.0

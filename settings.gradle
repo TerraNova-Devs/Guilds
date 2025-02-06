@@ -1,1 +1,5 @@
-rootProject.name = 'guilds'
+rootProject.name = "guilds"
+
+include("guilds-common")
+include("guilds-main")
+include("guilds-farming")

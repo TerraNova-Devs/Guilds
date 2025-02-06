@@ -1,0 +1,17 @@
+name: GuildsMain
+version: '1.0.0'
+main: de.mcterranova.guilds.main.GuildsMainPlugin
+api-version: '1.21'
+authors: [ Bastizeit ]
+depend:
+  - Oraxen
+  - Citizens
+commands:
+  guild:
+    description: Gilden-Commands
+    usage: /guild
+    permission: guild.use
+  guildadmin:
+    description: Admin commands for guild setup
+    usage: /guildadmin
+    permission: guild.admin

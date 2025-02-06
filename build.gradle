@@ -6,80 +6,70 @@ plugins {
 group = 'de.mcterranova'
 version = '1.0.0'
 
-repositories {
-    mavenCentral()
-    maven {
-        name = 'citizens-repo'
-        url = 'https://maven.citizensnpcs.co/repo'
-    }
-    maven {
-        name = "papermc-repo"
-        url = "https://repo.papermc.io/repository/maven-public/"
-    }
-    maven {
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/groups/public/"
-    }
-    maven {
-        name = 'enginehub-repo'
-        url = 'https://maven.enginehub.org/repo/'
-    }
-    maven {
-        name = "Oraxen"
-        url "https://repo.oraxen.com/releases"
-    }
-    maven {
-        name = "github"
-        url = "https://maven.pkg.github.com/TerraNova-Devs/TerranovaLib"
-        credentials {
-            username = project.findProperty("githubUser")
-            password = project.findProperty("githubToken")
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.github.goooler.shadow'
+
+    repositories {
+        mavenCentral()
+
+        maven {
+            name = 'papermc-repo'
+            url = 'https://repo.papermc.io/repository/maven-public/'
+        }
+        maven {
+            name = 'citizens-repo'
+            url = 'https://maven.citizensnpcs.co/repo'
+        }
+        maven {
+            name = "codemc-repo"
+            url = "https://repo.codemc.org/repository/maven-public/"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/groups/public/"
+        }
+        maven {
+            name = 'enginehub-repo'
+            url = 'https://maven.enginehub.org/repo/'
+        }
+        maven {
+            name = "Oraxen"
+            url = "https://repo.oraxen.com/releases"
+        }
+        maven {
+            name = "github"
+            url = "https://maven.pkg.github.com/TerraNova-Devs/TerranovaLib"
+            credentials {
+                // You might store these in gradle.properties or use env variables
+                username = project.findProperty("githubUser") ?: ""
+                password = project.findProperty("githubToken") ?: ""
+            }
         }
     }
-}
 
-dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
-    compileOnly("de.mcterranova:terranova-lib:0.8.9")
-    compileOnly('net.citizensnpcs:citizens-main:2.0.35-SNAPSHOT') {
-        exclude group: '*', module: '*'
+    dependencies {
+        implementation("com.zaxxer:HikariCP:5.0.1")
     }
-    implementation("com.zaxxer:HikariCP:5.0.1")
-    compileOnly("io.th0rgal:oraxen:1.180.0")
-}
 
-def targetJavaVersion = 21
-java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    def targetJavaVersion = 21
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+        }
+        sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
+        targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
     }
-}
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        options.release.set(targetJavaVersion)
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+            options.release.set(targetJavaVersion)
+        }
     }
-}
 
-processResources {
-    def props = [version: version]
-    inputs.properties props
-    filteringCharset 'UTF-8'
-    filesMatching('plugin.yml') {
-        expand props
+    // Ensure shadow jar is built on 'build'
+    tasks.named("build") {
+        dependsOn "shadowJar"
     }
-}
-
-shadowJar {
-    destinationDirectory.set(file("./build/libs"))
-    archiveClassifier.set('all')
-}
-
-tasks.build {
-    dependsOn tasks.shadowJar
 }

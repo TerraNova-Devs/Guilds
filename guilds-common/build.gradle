@@ -1,0 +1,28 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // If these classes reference any Bukkit classes (like Player), keep compileOnly for Paper API:
+    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
+
+    // If your code references Citizens classes, you can do compileOnly
+    // compileOnly("net.citizensnpcs:citizens-main:2.0.35-SNAPSHOT")
+
+    // TerranovaLib if needed in the shared code:
+    // compileOnly("de.mcterranova:terranova-lib:0.8.9")
+
+    // We may keep Oraxen as compileOnly if your TaskManager references it for item creation
+    // compileOnly("io.th0rgal:oraxen:1.180.0")
+
+    // (Hikari is declared in root's subprojects scope,
+    //  so we have it as 'implementation' automatically)
+}
+
+tasks.processResources {
+    // no plugin.yml here
+}
+
+tasks.named("build") {
+    // no shadowJar here
+}

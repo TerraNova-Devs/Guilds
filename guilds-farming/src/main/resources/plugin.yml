@@ -1,0 +1,10 @@
+name: GuildsFarming
+version: 1.0.0
+main: de.mcterranova.guilds.farming.GuildsFarmingPlugin
+api-version: "1.21"
+authors: [ "Bastizeit" ]
+commands:
+  guild:
+    description: Minimal /guild command for tasks
+    usage: /guild
+    permission: guild.use

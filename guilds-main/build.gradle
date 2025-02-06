@@ -1,0 +1,21 @@
+dependencies {
+    implementation(project(":guilds-common"))
+
+    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
+    compileOnly('net.citizensnpcs:citizens-main:2.0.35-SNAPSHOT') {
+        exclude group: '*', module: '*'
+    }
+    compileOnly("io.th0rgal:oraxen:1.180.0")
+    compileOnly("de.mcterranova:terranova-lib:0.8.9")
+}
+
+tasks.processResources {
+    filteringCharset = 'UTF-8'
+    filesMatching("plugin.yml") {
+        expand("version": project.version)
+    }
+}
+
+shadowJar {
+    archiveClassifier.set("")
+}
