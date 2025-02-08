@@ -3,6 +3,7 @@ package de.mcterranova.guilds.gui;
 import de.mcterranova.guilds.Guilds;
 import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.GuildTask;
+import de.mcterranova.guilds.service.GuildManager;
 import de.mcterranova.guilds.service.TaskManager;
 import de.mcterranova.terranovaLib.roseGUI.RoseGUI;
 import de.mcterranova.terranovaLib.roseGUI.RoseItem;

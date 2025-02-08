@@ -1,6 +1,7 @@
 package de.mcterranova.guilds.gui;
 
 import de.mcterranova.guilds.model.Guild;
+import de.mcterranova.guilds.model.GuildMember;
 import de.mcterranova.guilds.service.GuildManager;
 import de.mcterranova.terranovaLib.roseGUI.RoseGUI;
 import de.mcterranova.terranovaLib.roseGUI.RoseItem;
@@ -11,6 +12,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class JoinGui extends RoseGUI {
@@ -26,24 +31,63 @@ public class JoinGui extends RoseGUI {
 
     @Override
     public void onOpen(InventoryOpenEvent event) throws SQLException {
-        RoseItem joinItem = new RoseItem.Builder()
-                .material(Material.EMERALD)
-                .displayName(Component.text("Beitreten"))
+        Player viewer = (Player) event.getPlayer();
+        UUID playerId = viewer.getUniqueId();
+
+        addLeaveSwitchGuildOption(viewer, playerId);
+    }
+
+    /**
+     * Adds the Leave/Switch Guild option to the GUI.
+     *
+     * @param player   The player viewing the GUI.
+     * @param playerId The UUID of the player.
+     */
+    private void addLeaveSwitchGuildOption(Player player, UUID playerId) {
+        boolean canSwitch = guildManager.canSwitchGuild(playerId);
+        Material material = canSwitch ? Material.GREEN_BANNER : Material.RED_BANNER;
+        String displayName = canSwitch ? "§aGilde wechseln" : "§cGilde wechseln (gesperrt)";
+        List<Component> lore = new ArrayList<>();
+
+        if (canSwitch) {
+            lore.add(Component.text("§7Du kannst jetzt deine Gilde wechseln."));
+            lore.add(Component.text("§7Bedingungen:"));
+            lore.add(Component.text("§7Anfang des Monats. (Die ersten 7 Tage)"));
+            lore.add(Component.text("§7Heute noch nicht gewechselt."));
+        } else {
+            // Calculate remaining days
+            GuildMember member = guildManager.getGuildMember(playerId);
+
+            lore.add(Component.text("§7Du kannst deine Gilde noch nicht wechseln."));
+            if (member != null) {
+                LocalDate today = LocalDate.now();
+                long daysUntilNextMonth = today.until(today.withDayOfMonth(1).plusMonths(1), ChronoUnit.DAYS);
+                if (daysUntilNextMonth > 0 && today.getDayOfMonth() > 7) {
+                    lore.add(Component.text("§7Noch §e" + daysUntilNextMonth + " §7Tage."));
+                    lore.add(Component.text("§7Warte bis zum Anfang des nächsten Monats."));
+                } else {
+                    lore.add(Component.text("§7Heute bereits gewechselt."));
+                }
+            }
+        }
+
+        RoseItem switchGuildItem = new RoseItem.Builder()
+                .material(material)
+                .displayName(Component.text(displayName))
+                .addLore(lore.toArray(new Component[0]))
                 .build()
                 .onClick((InventoryClickEvent e) -> {
-                    Player p = (Player) e.getWhoClicked();
-                    UUID playerId = p.getUniqueId();
-
-                    if (guildManager.getGuildByPlayer(playerId) != null) {
-                        p.sendMessage(Component.text("§cDu bist bereits in einer Gilde!"));
-                        return;
+                    if (canSwitch) {
+                        Player p = (Player) e.getWhoClicked();
+                        guildManager.switchGuild(guild.getName(), p);
+                        p.sendMessage(Component.text("§aDu hast deine Gilde verlassen!"));
+                        p.closeInventory();
+                    } else {
+                        player.sendMessage(Component.text("§cDu kannst deine Gilde noch nicht wechseln!"));
                     }
-
-                    guildManager.addMemberToGuild(guild.getName(), playerId);
-                    p.sendMessage(Component.text("§aDu bist der Gilde " + guild.getName() + " beigetreten!"));
-                    p.closeInventory();
                 });
 
-        addItem(4, joinItem);
+        int slot = 4;
+        addItem(slot, switchGuildItem);
     }
 }

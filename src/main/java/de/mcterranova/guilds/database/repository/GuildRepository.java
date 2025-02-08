@@ -72,7 +72,8 @@ public class GuildRepository implements GuildDao {
         return members;
     }
 
-    private GuildMember getGuildMember(UUID playerId) {
+    @Override
+    public GuildMember getGuildMember(UUID playerId) {
         try (Connection conn = pool.getDataSource().getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT contributed_points, joined_at FROM guild_members WHERE player_uuid=?")) {
             ps.setString(1, playerId.toString());
             try (ResultSet rs = ps.executeQuery()) {
@@ -165,6 +166,17 @@ public class GuildRepository implements GuildDao {
     public void resetAllGuildPoints() {
         try (Connection conn = pool.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement("UPDATE guilds SET points=0")) {
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void removeMemberFromGuild(UUID playerId) {
+        try (Connection conn = pool.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM guild_members WHERE player_uuid=?")) {
+            ps.setString(1, playerId.toString());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
