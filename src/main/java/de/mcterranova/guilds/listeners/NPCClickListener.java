@@ -41,7 +41,7 @@ public class NPCClickListener implements Listener {
         if (guild == null) return;
 
         Guild playerGuild = guildManager.getGuildByPlayer(player.getUniqueId());
-        if (!playerGuild.getName().equalsIgnoreCase(guild.getName())) {
+        if (playerGuild == null || !playerGuild.getName().equalsIgnoreCase(guild.getName())) {
             // Player is not in this guild => show JoinGui for the clicked guild
             new JoinGui(player, guild, guildManager).open();
         } else {

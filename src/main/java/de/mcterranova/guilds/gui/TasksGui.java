@@ -104,6 +104,20 @@ public class TasksGui extends RoseGUI {
             );
             addItem(23 + i, item);
         }
+
+        RoseItem memberList = new RoseItem.Builder()
+                .material(Material.PLAYER_HEAD)
+                .displayName(Component.text("§eGildenmitglieder"))
+                .addLore(
+                        Component.text("§7Klicke, um die Mitgliederliste zu sehen."),
+                        Component.text("§7Sortiert nach Gildenpunkten.")
+                )
+                .build()
+                .onClick((InventoryClickEvent e) -> {
+                    new GuildMemberGui((Player) e.getWhoClicked(), guild).open();
+                });
+
+        addItem(16, memberList);
     }
 
     private RoseItem buildTaskItem(GuildTask task,
