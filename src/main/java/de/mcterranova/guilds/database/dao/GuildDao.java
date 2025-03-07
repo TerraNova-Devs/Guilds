@@ -14,6 +14,7 @@ public interface GuildDao {
     Guild getGuildByMember(UUID playerId);
     void updateGuildPoints(String guildName, int points);
     void resetAllGuildPoints();
+    void resetAllPlayerPoints();
     void removeMemberFromGuild(UUID playerId);
     void addMemberToGuild(String guildName, UUID playerId);
     void createGuild(String guildName, GuildType type);

@@ -2,6 +2,7 @@ package de.mcterranova.guilds.gui;
 
 import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.service.GuildManager;
+import de.mcterranova.guilds.service.RewardManager;
 import de.mcterranova.terranovaLib.roseGUI.RoseGUI;
 import de.mcterranova.terranovaLib.roseGUI.RoseItem;
 import de.mcterranova.terranovaLib.roseGUI.RosePagination;
@@ -9,6 +10,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 
 import java.util.Comparator;
 import java.util.List;
@@ -17,19 +19,22 @@ import java.util.stream.Collectors;
 public class GuildLeaderboardGui extends RoseGUI {
 
     private final GuildManager guildManager;
+    private final RewardManager rewardManager;
     private final RosePagination pagination;
 
-    public GuildLeaderboardGui(Player player, GuildManager guildManager) {
+    // Now include the RewardManager (or alternatively pass the plugin instance to get it)
+    public GuildLeaderboardGui(Player player, GuildManager guildManager, RewardManager rewardManager) {
         super(player, "guild_leaderboard_gui", Component.text("§eGilden-Rangliste"), 6);
         this.guildManager = guildManager;
+        this.rewardManager = rewardManager;
         this.pagination = new RosePagination(this);
     }
 
     @Override
-    public void onOpen(org.bukkit.event.inventory.InventoryOpenEvent event) {
-        // Get all guilds sorted by points in descending order
+    public void onOpen(InventoryOpenEvent event) {
+        // Sort guilds by weighted score (highest first)
         List<Guild> sortedGuilds = guildManager.getAllGuilds().stream()
-                .sorted(Comparator.comparingInt(Guild::getPoints).reversed())
+                .sorted(Comparator.comparingDouble(g -> rewardManager.calculateFairScore((Guild) g)).reversed())
                 .collect(Collectors.toList());
 
         pagination.registerPageSlotsBetween(10, 16);
@@ -37,14 +42,16 @@ public class GuildLeaderboardGui extends RoseGUI {
         pagination.registerPageSlotsBetween(28, 34);
         pagination.registerPageSlotsBetween(37, 43);
 
-        // Add guilds to pagination
         int rank = 1;
         for (Guild guild : sortedGuilds) {
+            // Calculate the weighted score (only active members count)
+            double weightedScore = rewardManager.calculateFairScore(guild);
             RoseItem guildItem = new RoseItem.Builder()
-                    .material(Material.EMERALD_BLOCK) // Top guilds get Emerald Blocks
+                    .material(Material.EMERALD_BLOCK)
                     .displayName(Component.text("§6#" + rank + " §a" + guild.getName()))
                     .addLore(
                             Component.text("§7Gildenpunkte: §e" + guild.getPoints()),
+                            Component.text("§7Gewichtete Gildenpunkte: §e" + String.format("%.2f", weightedScore)),
                             Component.text("§7Mitglieder: §e" + guild.getMembers().size())
                     )
                     .build();
@@ -52,18 +59,12 @@ public class GuildLeaderboardGui extends RoseGUI {
             rank++;
         }
 
-        // Update the GUI with the current page
         pagination.update();
-
-        // Add navigation items
         addNavigationItems();
     }
 
-    /**
-     * Adds navigation items for pagination.
-     */
     private void addNavigationItems() {
-        // Previous Page Button
+        // Add navigation items as before (previous/next page, filler, etc.)
         RoseItem previousPage = new RoseItem.Builder()
                 .material(Material.ARROW)
                 .displayName(Component.text("§eVorherige Seite"))
@@ -76,7 +77,6 @@ public class GuildLeaderboardGui extends RoseGUI {
                 });
         addItem(48, previousPage);
 
-        // Next Page Button
         RoseItem nextPage = new RoseItem.Builder()
                 .material(Material.ARROW)
                 .displayName(Component.text("§eNächste Seite"))
@@ -89,13 +89,9 @@ public class GuildLeaderboardGui extends RoseGUI {
                 });
         addItem(50, nextPage);
 
-        // Fill other slots in the navigation bar
         fillBorder();
     }
 
-    /**
-     * Fills the navigation bar with decorative filler items.
-     */
     private void fillBorder() {
         RoseItem filler = new RoseItem.Builder()
                 .material(Material.BLACK_STAINED_GLASS_PANE)

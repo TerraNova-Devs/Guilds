@@ -7,6 +7,7 @@ import de.mcterranova.guilds.config.PluginConfig;
 import de.mcterranova.guilds.database.ConnectionPool;
 import de.mcterranova.guilds.database.repository.GuildRepository;
 import de.mcterranova.guilds.database.repository.GuildTaskRepository;
+import de.mcterranova.guilds.database.repository.UnclaimedRewardRepository;
 import de.mcterranova.guilds.listeners.NPCClickListener;
 import de.mcterranova.guilds.listeners.PlayerProgressListener;
 import de.mcterranova.guilds.service.*;
@@ -27,11 +28,13 @@ public class Guilds extends JavaPlugin {
 
     private GuildRepository guildRepository;
     private GuildTaskRepository guildTaskRepository;
+    private UnclaimedRewardRepository unclaimedRewardRepository;
 
     private GuildManager guildManager;
     private TaskManager taskManager;
     private RewardManager rewardManager;
     private NPCManager npcManager;
+    private UnclaimedRewardManager unclaimedRewardManager;
 
     @Override
     public void onEnable() {
@@ -45,10 +48,12 @@ public class Guilds extends JavaPlugin {
 
         this.guildRepository = new GuildRepository(connectionPool);
         this.guildTaskRepository = new GuildTaskRepository(connectionPool.getDataSource());
+        this.unclaimedRewardRepository = new UnclaimedRewardRepository(connectionPool.getDataSource());
 
         this.guildManager = new GuildManager(guildRepository);
-        this.taskManager = new TaskManager(this, guildManager, guildTaskRepository);
-        this.rewardManager = new RewardManager(this, guildManager, guildTaskRepository);
+        this.unclaimedRewardManager = new UnclaimedRewardManager(this, unclaimedRewardRepository);
+        this.taskManager = new TaskManager(this, guildManager, guildTaskRepository, unclaimedRewardManager);
+        this.rewardManager = new RewardManager(this, guildManager, unclaimedRewardRepository);
         this.npcManager = new NPCManager(this, guildManager);
 
         getServer().getPluginManager().registerEvents(new PlayerProgressListener(this, guildManager, taskManager), this);
@@ -123,6 +128,10 @@ public class Guilds extends JavaPlugin {
 
     public RewardManager getRewardManager() {
         return rewardManager;
+    }
+
+    public UnclaimedRewardManager getUnclaimedRewardManager() {
+        return unclaimedRewardManager;
     }
 
     public NPCManager getNpcManager() {

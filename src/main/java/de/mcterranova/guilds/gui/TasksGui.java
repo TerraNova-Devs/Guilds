@@ -1,17 +1,22 @@
 package de.mcterranova.guilds.gui;
 
 import de.mcterranova.guilds.Guilds;
+import de.mcterranova.guilds.database.dao.UnclaimedRewardDao;
 import de.mcterranova.guilds.model.Guild;
 import de.mcterranova.guilds.model.GuildTask;
+import de.mcterranova.guilds.model.UnclaimedReward;
 import de.mcterranova.guilds.service.GuildManager;
 import de.mcterranova.guilds.service.TaskManager;
+import de.mcterranova.guilds.service.UnclaimedRewardManager;
 import de.mcterranova.terranovaLib.roseGUI.RoseGUI;
 import de.mcterranova.terranovaLib.roseGUI.RoseItem;
+import io.th0rgal.oraxen.api.OraxenItems;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,6 +32,7 @@ public class TasksGui extends RoseGUI {
     private final List<GuildTask> monthlyTasks;
 
     private final TaskManager taskManager;
+    private final UnclaimedRewardManager urManager;
 
     public TasksGui(Guilds plugin, Player player, Guild guild,
                     List<GuildTask> dailyTasks, List<GuildTask> monthlyTasks) {
@@ -36,6 +42,7 @@ public class TasksGui extends RoseGUI {
         this.dailyTasks = dailyTasks;
         this.monthlyTasks = monthlyTasks;
         this.taskManager = plugin.getTaskManager();
+        this.urManager = plugin.getUnclaimedRewardManager();
     }
 
     @Override
@@ -128,10 +135,59 @@ public class TasksGui extends RoseGUI {
                 )
                 .build()
                 .onClick((InventoryClickEvent e) -> {
-                    new GuildLeaderboardGui((Player) e.getWhoClicked(), plugin.getGuildManager()).open();
+                    new GuildLeaderboardGui((Player) e.getWhoClicked(), plugin.getGuildManager(), plugin.getRewardManager()).open();
                 });
 
         addItem(25, leaderboard);
+
+        List<UnclaimedReward> rewardsPreview = urManager.getRewards(playerId.toString());
+
+        RoseItem.Builder claimRewardsItemBuilder = new RoseItem.Builder();
+
+        if (!rewardsPreview.isEmpty()) {
+            claimRewardsItemBuilder
+                    .material(Material.CHEST)
+                    .displayName(Component.text("§eUnbeanspruchte Belohnungen"))
+                    .addLore(
+                            Component.text("§7Du hast " + rewardsPreview.size() + " Belohnungen, die du abholen kannst.")
+                    );
+        } else {
+            claimRewardsItemBuilder
+                    .material(Material.CHEST)
+                    .displayName(Component.text("§cBelohnungen abholen"))
+                    .addLore(
+                            Component.text("§7Klicke, um alle unbeanspruchten Belohnungen"),
+                            Component.text("§7Du hast 0 Belohnungen, die du abholen kannst.")
+                    );
+        }
+        RoseItem claimRewardsItem = claimRewardsItemBuilder.build()
+                .onClick((InventoryClickEvent e) -> {
+                    int rewardsClaimed = 0;
+                    List<UnclaimedReward> rewards = urManager.getRewards(playerId.toString());
+                    urManager.claimRewards(playerId.toString());
+                    for (UnclaimedReward reward : rewards) {
+                        int amount = (int) reward.getRewardMoney();
+                        ItemStack moneyStack = OraxenItems.getItemById("terranova_silver").build();
+                        moneyStack.setAmount(amount);
+                        var remaining = viewer.getInventory().addItem(moneyStack.clone());
+                        if (!remaining.isEmpty()) {
+                            viewer.sendMessage("§cDein Inventar ist voll! Überschüssige Items wurden gedroppt.");
+                            remaining.values().forEach(item ->
+                                    viewer.getWorld().dropItem(viewer.getLocation(), item)
+                            );
+                        }
+                        rewardsClaimed++;
+                    }
+                    if (rewardsClaimed > 0) {
+                        viewer.sendMessage(Component.text("§aDu hast " + rewardsClaimed + " unbeanspruchte Belohnungen abgeholt!"));
+                    } else {
+                        viewer.sendMessage(Component.text("§eKeine unbeanspruchten Belohnungen gefunden."));
+                    }
+                    // Refresh the GUI.
+                    new TasksGui(plugin, viewer, guild, dailyTasks, monthlyTasks).open();
+                });
+        // Place the new item in an available slot (for example, slot 31)
+        addItem(31, claimRewardsItem);
     }
 
     private RoseItem buildTaskItem(GuildTask task,

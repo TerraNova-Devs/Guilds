@@ -41,7 +41,7 @@ public class Guild {
         return activeCount;
     }
 
-    private boolean isPlayerActive(GuildMember player) {
+    public boolean isPlayerActive(GuildMember player) {
         int scoreContribution =  player.getContributedPoints();
 
         return scoreContribution >= 20;

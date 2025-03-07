@@ -57,3 +57,11 @@ CREATE TABLE IF NOT EXISTS task_resets
     last_reset TIMESTAMP   NOT NULL,
     PRIMARY KEY (reset_type)
 );
+
+-- 6) Unclaimed Rewards
+CREATE TABLE IF NOT EXISTS unclaimed_rewards
+(
+    reward_id     INT AUTO_INCREMENT PRIMARY KEY,
+    player_uuid   VARCHAR(36)  NOT NULL,
+    reward_money  DOUBLE       NOT NULL
+);

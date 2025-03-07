@@ -1,6 +1,7 @@
 package de.mcterranova.guilds.database.dao;
 
 import de.mcterranova.guilds.model.GuildTask;
+import de.mcterranova.guilds.model.UnclaimedReward;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ public interface GuildTaskDao {
     void createTask(GuildTask task);
     List<GuildTask> loadTasksForGuild(String guildName, String periodicity);
     GuildTask loadTaskById(int taskId);
+    List<UnclaimedReward> getUnclaimedRewards();
 
     // Delete tasks for a certain date & periodicity (e.g. clearing old daily tasks)
     void deleteTasksByDateAndPeriodicity(LocalDate date, String periodicity);

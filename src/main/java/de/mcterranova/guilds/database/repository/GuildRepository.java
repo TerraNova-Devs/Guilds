@@ -173,6 +173,16 @@ public class GuildRepository implements GuildDao {
     }
 
     @Override
+    public void resetAllPlayerPoints() {
+        try (Connection conn = pool.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE guild_members SET contributed_points=0")) {
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void removeMemberFromGuild(UUID playerId) {
         try (Connection conn = pool.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement("DELETE FROM guild_members WHERE player_uuid=?")) {

@@ -55,6 +55,7 @@ public class GuildManager {
 
     public void resetAllGuildPoints() {
         guildDao.resetAllGuildPoints();
+        guildDao.resetAllPlayerPoints();
     }
 
     public boolean isPlayerInAnyGuild(UUID playerId) {

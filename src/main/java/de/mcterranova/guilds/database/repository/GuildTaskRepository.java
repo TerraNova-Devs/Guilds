@@ -3,6 +3,7 @@ package de.mcterranova.guilds.database.repository;
 import de.mcterranova.guilds.database.dao.GuildTaskDao;
 import de.mcterranova.guilds.model.GuildTask;
 import de.mcterranova.guilds.model.TaskEventType;
+import de.mcterranova.guilds.model.UnclaimedReward;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -369,5 +370,30 @@ public class GuildTaskRepository implements GuildTaskDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public List<UnclaimedReward> getUnclaimedRewards() {
+        List<UnclaimedReward> rewards = new ArrayList<>();
+        String sql = "SELECT p.player_uuid, t.money_reward " +
+                "FROM guild_task_progress p " +
+                "JOIN guild_tasks t ON p.task_id = t.task_id " +
+                "WHERE p.completed_at IS NOT NULL AND p.claimed_at IS NULL";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                String playerId = rs.getString("player_uuid");
+                int moneyReward = rs.getInt("money_reward");
+                UnclaimedReward reward = new UnclaimedReward(playerId, moneyReward);
+                rewards.add(reward);
+            }
+            return rewards;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rewards;
     }
 }

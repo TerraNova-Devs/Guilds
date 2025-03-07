@@ -7,7 +7,7 @@ database:
 
 economy:
   daily_task_money_base: 50.0
-  monthly_winner_money: 1000.0
+  monthly_winner_money: 128.0
 
 tasks:
   # Here, each guild type (FARMER, MINER, etc.)

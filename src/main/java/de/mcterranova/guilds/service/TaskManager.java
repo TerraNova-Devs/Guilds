@@ -2,10 +2,7 @@ package de.mcterranova.guilds.service;
 
 import de.mcterranova.guilds.Guilds;
 import de.mcterranova.guilds.database.dao.GuildTaskDao;
-import de.mcterranova.guilds.model.Guild;
-import de.mcterranova.guilds.model.GuildTask;
-import de.mcterranova.guilds.model.TaskEventType;
-import de.mcterranova.guilds.model.TaskPeriodicity;
+import de.mcterranova.guilds.model.*;
 import de.mcterranova.guilds.util.TimeUtil;
 import io.th0rgal.oraxen.api.OraxenItems;
 import org.bukkit.Bukkit;
@@ -23,11 +20,13 @@ public class TaskManager {
     private final Guilds plugin;
     private final GuildManager guildManager;
     private final GuildTaskDao taskDao;
+    private final UnclaimedRewardManager unclaimedRewardManager;
 
-    public TaskManager(Guilds plugin, GuildManager guildManager, GuildTaskDao taskDao) {
+    public TaskManager(Guilds plugin, GuildManager guildManager, GuildTaskDao taskDao, UnclaimedRewardManager unclaimedRewardManager) {
         this.plugin = plugin;
         this.guildManager = guildManager;
         this.taskDao = taskDao;
+        this.unclaimedRewardManager = unclaimedRewardManager;
     }
 
     /**
@@ -65,17 +64,15 @@ public class TaskManager {
     }
 
     public void dailyResetCore() {
-        // Remove any daily tasks from *today* or from yesterday—your choice:
-        // This example deletes tasks assigned *today*, so we can reassign fresh tasks:
+        this.archiveUnclaimedRewards();
+
         taskDao.deleteTasksByDateAndPeriodicity(LocalDate.now(), "DAILY");
 
-        // For each guild, pick e.g. 3 daily tasks from config
         for (Guild g : guildManager.getAllGuilds()) {
-            // 1) load from config
             List<GuildTask> possibleTasks = loadTaskPoolFromConfig(g.getType().name(), "DAILY");
-            // 2) pick 3 random
+            // pick 3 random
             List<GuildTask> randomThree = pickRandomTasks(possibleTasks, 3);
-            // 3) create them in DB
+
             for (GuildTask t : randomThree) {
                 t.setGuildName(g.getName());
                 t.setPeriodicity("DAILY");
@@ -123,10 +120,12 @@ public class TaskManager {
     }
 
     public void monthlyResetCore() {
-        // Delete tasks with periodicity=MONTHLY from *today*
+        this.archiveUnclaimedRewards();
+
+        plugin.getRewardManager().evaluateMonthlyWinner();
+
         taskDao.deleteTasksByDateAndPeriodicity(LocalDate.now(), "MONTHLY");
 
-        // For each guild, pick 1 monthly task from config (example)
         plugin.getLogger().info("Assigning new monthly tasks for all guilds...");
         for (Guild g : guildManager.getAllGuilds()) {
             plugin.getLogger().info("Assigning monthly tasks for guild: " + g.getName());
@@ -370,5 +369,14 @@ public class TaskManager {
         Collections.shuffle(pool, ThreadLocalRandom.current());
         int end = Math.min(count, pool.size());
         return pool.subList(0, end);
+    }
+
+    private void archiveUnclaimedRewards(){
+        List<UnclaimedReward> unclaimedRewards = taskDao.getUnclaimedRewards();
+
+        for (UnclaimedReward reward : unclaimedRewards) {
+            plugin.getLogger().info("Archiving unclaimed reward for player: " + reward.getPlayerUuid());
+            unclaimedRewardManager.insertReward(reward);
+        }
     }
 }
